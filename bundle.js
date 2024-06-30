@@ -10536,13 +10536,19 @@
     HighlightJS.registerLanguage('plaintext', plaintext);
     HighlightJS.registerLanguage('rust', rust);
     HighlightJS.registerLanguage('typescript', typescript);
+    const timeout = 0;
+    /**
+     * Summary: Get sanitized input text body
+     */
+    const getCleanInput = () => {
+        const inputText = document.getElementById("textInput").value || "";
+        return purify.sanitize(inputText);
+    };
     /**
      * Summary: Rerender markdown every {timeout}ms while typing, and also {timeout}ms after no input.
      */
     const renderMarkdown = () => {
-        const inputText = document.getElementById("textInput").value || "";
-        const cleanText = purify.sanitize(inputText);
-        // console.log(cleanText)
+        const cleanText = getCleanInput();
         const marked = new Marked(markedHighlight({
             langPrefix: 'hljs language-',
             highlight(code, lang, info) {
@@ -10551,7 +10557,7 @@
             }
         }));
         document.getElementById("mdRender").innerHTML = marked.parse(cleanText);
-        // Reformat inline code blocks
+        // Reformat inline code blocks (PLACEHOLDER UNTIL RENDERER TAGS IMPLEMENTED)
         const codeBlocks = Array.from(document.getElementsByTagName("code"));
         codeBlocks.map((code) => {
             const parent = code.parentElement;
@@ -10561,11 +10567,40 @@
             }
         });
     };
-    const timeout = 0;
+    /**
+     * @returns UserNote object containing title and body of currently active note
+     */
+    const getActiveNote = () => {
+        const noteTitle = purify.sanitize(document.getElementById("fileName").innerHTML);
+        const noteBody = getCleanInput();
+        return {
+            noteTitle: noteTitle,
+            noteBody: noteBody
+        };
+    };
+    /**
+     * Summary: Autosave active note to chrome local storage
+     */
+    const saveActiveNote = () => {
+        const userNote = getActiveNote();
+        chrome.storage.local.set({ activeNote: userNote });
+        console.log("Note Saved");
+    };
+    /**
+     * Summary: Autoload active note on new tab from chrome local storage
+     */
+    const loadActiveNote = () => {
+        chrome.storage.local.get(null, (result) => {
+            document.getElementById("fileName").innerHTML = result.activeNote.noteTitle;
+            document.getElementById("textInput").value = result.activeNote.noteBody;
+            renderMarkdown();
+        });
+    };
     // Debounce rendering to rerender after no input detected for {timeout}ms
     const debounce = (lastExecuted) => {
         if (Date.now() - lastExecuted.msSinceLastInput > timeout) {
             renderMarkdown();
+            saveActiveNote();
         }
     };
     const handleInput = (lastExecuted) => {
@@ -10579,6 +10614,7 @@
             lastExecuted.msSinceLastUpdate = currTime;
         }
     };
+    window.onload = loadActiveNote;
     // Add event listener to the editable side
     const textInput = document.getElementById("textInput");
     textInput.addEventListener("input", handleInput.bind(undefined, {
