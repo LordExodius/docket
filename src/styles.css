@@ -2,6 +2,11 @@ body {
     height: 100vh;
 }
 
+/* <pre> tags used for code blocks only */
+pre {
+    padding: 10px;
+}
+
 #docketBody {
     display: flex;
     flex-wrap: wrap;
