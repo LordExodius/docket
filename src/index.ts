@@ -40,13 +40,16 @@ const renderMarkdown = () => {
     )
     document.getElementById("mdRender")!.innerHTML = marked.parse(cleanText) as keyof typeof String
     
-    // code block background highlight
+    // Reformat inline code blocks
     const codeBlocks = Array.from(document.getElementsByTagName("code"))
-    codeBlocks.map(code => {
-        (<HTMLElement>code.parentElement).style.backgroundColor = "#f6f8fa"
+    codeBlocks.map((code: HTMLElement) => {
+        const parent = code.parentElement
+        if ((<HTMLElement>parent).tagName != "PRE") {
+            code.style.padding = ".2em .4em"
+            code.style.borderRadius = "5px"
+        }
     })
 }
-
 interface LastExecuted {
     msSinceLastInput: number,
     msSinceLastUpdate: number
@@ -83,6 +86,7 @@ textInput.addEventListener("input",
         msSinceLastUpdate: Date.now()
     }))
 
+// Override default tab behaviour
 textInput.addEventListener("keydown", 
     (e) => {
         if (e.key === "Tab") {

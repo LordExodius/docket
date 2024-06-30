@@ -7,6 +7,7 @@ import c from 'highlight.js/lib/languages/c';
 import cpp from 'highlight.js/lib/languages/cpp';
 import java from 'highlight.js/lib/languages/java';
 import javascript from 'highlight.js/lib/languages/javascript';
+import plaintext from 'highlight.js/lib/languages/plaintext';
 import python from 'highlight.js/lib/languages/python';
 import rust from 'highlight.js/lib/languages/rust';
 import typescript from 'highlight.js/lib/languages/typescript';
@@ -15,6 +16,7 @@ hljs.registerLanguage('cpp', cpp);
 hljs.registerLanguage('java', java);
 hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('python', python);
+hljs.registerLanguage('plaintext', plaintext);
 hljs.registerLanguage('rust', rust);
 hljs.registerLanguage('typescript', typescript);
 /**
@@ -32,10 +34,14 @@ const renderMarkdown = () => {
         }
     }));
     document.getElementById("mdRender").innerHTML = marked.parse(cleanText);
-    // code block background highlight
+    // Reformat inline code blocks
     const codeBlocks = Array.from(document.getElementsByTagName("code"));
-    codeBlocks.map(code => {
-        code.parentElement.style.backgroundColor = "#f6f8fa";
+    codeBlocks.map((code) => {
+        const parent = code.parentElement;
+        if (parent.tagName != "PRE") {
+            code.style.padding = ".2em .4em";
+            code.style.borderRadius = "5px";
+        }
     });
 };
 const timeout = 0;
@@ -62,6 +68,7 @@ textInput.addEventListener("input", handleInput.bind(undefined, {
     msSinceLastInput: Date.now(),
     msSinceLastUpdate: Date.now()
 }));
+// Override default tab behaviour
 textInput.addEventListener("keydown", (e) => {
     if (e.key === "Tab") {
         e.preventDefault();

@@ -8895,6 +8895,24 @@
     }
 
     /*
+    Language: Plain text
+    Author: Egor Rogov (e.rogov@postgrespro.ru)
+    Description: Plain text without any highlighting.
+    Category: common
+    */
+
+    function plaintext(hljs) {
+      return {
+        name: 'Plain text',
+        aliases: [
+          'text',
+          'txt'
+        ],
+        disableAutodetect: true
+      };
+    }
+
+    /*
     Language: Python
     Description: Python is an interpreted, object-oriented, high-level programming language with dynamic semantics.
     Website: https://www.python.org
@@ -10515,6 +10533,7 @@
     HighlightJS.registerLanguage('java', java);
     HighlightJS.registerLanguage('javascript', javascript$1);
     HighlightJS.registerLanguage('python', python);
+    HighlightJS.registerLanguage('plaintext', plaintext);
     HighlightJS.registerLanguage('rust', rust);
     HighlightJS.registerLanguage('typescript', typescript);
     /**
@@ -10532,10 +10551,14 @@
             }
         }));
         document.getElementById("mdRender").innerHTML = marked.parse(cleanText);
-        // code block background highlight
+        // Reformat inline code blocks
         const codeBlocks = Array.from(document.getElementsByTagName("code"));
-        codeBlocks.map(code => {
-            code.parentElement.style.backgroundColor = "#f6f8fa";
+        codeBlocks.map((code) => {
+            const parent = code.parentElement;
+            if (parent.tagName != "PRE") {
+                code.style.padding = ".2em .4em";
+                code.style.borderRadius = "5px";
+            }
         });
     };
     const timeout = 0;
@@ -10562,6 +10585,7 @@
         msSinceLastInput: Date.now(),
         msSinceLastUpdate: Date.now()
     }));
+    // Override default tab behaviour
     textInput.addEventListener("keydown", (e) => {
         if (e.key === "Tab") {
             e.preventDefault();
