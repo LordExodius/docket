@@ -7,17 +7,19 @@ import c from 'highlight.js/lib/languages/c'
 import cpp from 'highlight.js/lib/languages/cpp'
 import java from 'highlight.js/lib/languages/java'
 import javascript from 'highlight.js/lib/languages/javascript'
+import plaintext from 'highlight.js/lib/languages/plaintext'
 import python from 'highlight.js/lib/languages/python'
 import rust from 'highlight.js/lib/languages/rust'
 import typescript from 'highlight.js/lib/languages/typescript'
 
-hljs.registerLanguage('c', c);
-hljs.registerLanguage('cpp', cpp);
-hljs.registerLanguage('java', java);
-hljs.registerLanguage('javascript', javascript);
-hljs.registerLanguage('python', python);
-hljs.registerLanguage('rust', rust);
-hljs.registerLanguage('typescript', typescript);
+hljs.registerLanguage('c', c)
+hljs.registerLanguage('cpp', cpp)
+hljs.registerLanguage('java', java)
+hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('python', python)
+hljs.registerLanguage('plaintext', plaintext)
+hljs.registerLanguage('rust', rust)
+hljs.registerLanguage('typescript', typescript)
 
 /**
  * Summary: Rerender markdown every {timeout}ms while typing, and also {timeout}ms after no input.
