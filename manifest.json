@@ -1,0 +1,12 @@
+{
+    "manifest_version": 3,
+    "name": "docket",
+    "description": "markdown editor tab",
+    "version": "0.1",
+    "chrome_url_overrides": {
+        "newtab": "src/index.html"
+    },
+    "action": {
+        "default_icon": "icons/docket.png"
+    }
+}
