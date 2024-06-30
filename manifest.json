@@ -7,7 +7,9 @@
         "newtab": "src/index.html"
     },
     "action": {
-        "default_icon": "icons/docket.png",
-        "default_popup": "src/index.html"
-    }
+        "default_icon": "icons/docket.png"
+    },
+    "permissions": [
+        "storage"
+    ]
 }

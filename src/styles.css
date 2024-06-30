@@ -1,5 +1,24 @@
 body {
-    height: 100vh;
+    height: calc(100vh - 20px);
+    margin: 0;
+    padding: 10px;
+}
+
+h1, h2, h3,
+h4, h5, h6 {
+    font-weight: 600;
+}
+
+a:link {
+    text-decoration: none;
+    color: #489ae3;
+}
+a:visited {
+    text-decoration: none;
+    color: #489ae3;
+}
+a:hover {
+    text-decoration: underline;
 }
 
 /* The place you type */
@@ -14,10 +33,6 @@ textarea:focus {
     outline-width: 0;
 }
 
-#textInput {
-    padding: 10px
-}
-
 #docketBody {
     display: flex;
     flex-wrap: wrap;
@@ -26,9 +41,17 @@ textarea:focus {
     height: 100%;
 }
 
+#navBar {
+    flex-grow: 0.5;
+    width: 0;
+    background-color: #f6f8fa;
+    padding: 10px;
+}
+
 .bodyText {
     min-width: 300px;
     width: 0;
-    flex-grow: 1;
-    height: 80%;
+    flex-grow: 2;
+    height: calc(100% - 20px);
+    padding: 10px
 }
