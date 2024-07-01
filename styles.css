@@ -4,17 +4,16 @@ body {
     padding: 10px;
 }
 
+body.popup {
+    height: 550px;
+}
+
 button {
     margin-bottom: 16px;
 }
 
-/* The place you type */
-#mdEditor {
-    font-family: ui-monospace,"Cascadia Mono","Segoe UI Mono","Ubuntu Mono","Roboto Mono",Menlo, Monaco, Consolas,monospace; 
-    font-weight: 350;
-    line-height: 2ch;
-    resize: none;
-    border: 0;
+header.popup {
+    flex-grow: 1;
 }
 
 textarea:focus {
@@ -27,6 +26,14 @@ textarea:focus {
     gap: 10px;
     width: 100%;
     height: 100%;
+    overflow-x: hidden;
+}
+
+#docketBody.popup {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    overflow-y: hidden;
+    gap: 2px;
 }
 
 #navBar {
@@ -36,8 +43,34 @@ textarea:focus {
     padding: 10px;
 }
 
+#navBar.popup {
+    width: calc(100% - 20px);
+    display: flex;
+    height: 50px;
+}
+
+/* The place you type */
+#mdEditor {
+    font-family: ui-monospace,"Cascadia Mono","Segoe UI Mono","Ubuntu Mono","Roboto Mono",Menlo, Monaco, Consolas,monospace; 
+    font-weight: 350;
+    line-height: 2ch;
+    resize: none;
+    border: 0;
+}
+
+#mdEditor.popup {
+    width: calc(100% - 20px);
+    overflow: scroll;
+    overflow-x: hidden;
+}
+
 #mdRender {
     overflow: scroll;
+}
+
+#mdRender.popup {
+    width: calc(100% - 20px);
+    overflow-x: hidden;
 }
 
 #savedNotes {
@@ -46,6 +79,11 @@ textarea:focus {
 
 #fileName {
     border-bottom: 1px solid #b0b5b9;
+}
+
+#fileName.popup {
+    display: inline;
+    width: 200px;
 }
 
 #noteOptions {
@@ -58,9 +96,23 @@ textarea:focus {
     width: 0
 }
 
-#deleteNoteButton{
+#newNoteButton.popup {
+    margin: 2px;
+    padding: 0;
+    width: 60px;
+    height: 100%;
+}
+
+#deleteNoteButton {
     flex-grow: 1;
     width: 0;
+}
+
+#deleteNoteButton.popup {
+    margin: 2px;
+    padding: 0;
+    width: 30px;
+    height: 100%;
 }
 
 .bodyText {
@@ -71,6 +123,10 @@ textarea:focus {
     padding: 10px
 }
 
+.bodyText.popup {
+
+}
+
 .savedNoteLink {
     margin-bottom: 16px;
 }
@@ -79,4 +135,19 @@ textarea:focus {
     width: 1px;
     height: 100%;
     background-color: #e3e6e9;
+}
+
+.horizontalLine {
+    height: 1px;
+    width: 100%;
+    background-color: #e3e6e9;
+}
+
+.flexgrow {
+    flex-grow: 1;
+}
+
+.popup {
+    width: 400px;
+    overflow-y: hidden;
 }

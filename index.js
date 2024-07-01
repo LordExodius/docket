@@ -1,6 +1,7 @@
 import { Marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { markedHighlight } from 'marked-highlight';
+import markedFootnote from 'marked-footnote';
 import hljs from 'highlight.js/lib/core';
 // Import supported code languages (for size purposes)
 import c from 'highlight.js/lib/languages/c';
@@ -19,6 +20,16 @@ hljs.registerLanguage('python', python);
 hljs.registerLanguage('plaintext', plaintext);
 hljs.registerLanguage('rust', rust);
 hljs.registerLanguage('typescript', typescript);
+// Marked object
+const marked = new Marked({
+    gfm: true
+}, markedHighlight({
+    langPrefix: 'hljs language-',
+    highlight(code, lang, info) {
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language }).value;
+    }
+}), markedFootnote());
 const timeout = 0;
 let savedNotes = [];
 let currentUUID;
@@ -46,19 +57,11 @@ const getActiveNote = () => {
     };
 };
 /**
- * Summary: Rerender markdown every {timeout}ms while typing, and also {timeout}ms after no input.
+ * Summary: Rerender markdown
  */
 const renderMarkdown = () => {
     const editorText = getEditorText();
-    const marked = new Marked({
-        gfm: true
-    }, markedHighlight({
-        langPrefix: 'hljs language-',
-        highlight(code, lang, info) {
-            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-            return hljs.highlight(code, { language }).value;
-        }
-    }));
+    // Parse markdown and sanitize HTML output
     document.getElementById("mdRender").innerHTML = DOMPurify.sanitize(marked.parse(editorText));
     // Reformat inline code blocks (PLACEHOLDER UNTIL RENDERER TAGS IMPLEMENTED)
     const codeBlocks = Array.from(document.getElementsByTagName("code"));
