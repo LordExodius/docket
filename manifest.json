@@ -4,11 +4,11 @@
     "description": "markdown editor tab",
     "version": "0.1",
     "chrome_url_overrides": {
-        "newtab": "src/index.html"
+        "newtab": "dist/index.html"
     },
     "action": {
         "default_icon": "icons/docket.png",
-        "default_popup": "src/index.html"
+        "default_popup": "dist/index.html"
     },
     "permissions": [
         "storage"
