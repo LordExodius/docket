@@ -200,6 +200,9 @@ const deleteActiveNote = () => {
 };
 const runPreload = () => {
     chrome.storage.local.get(null, (result) => {
+        if (!result.activeNote) {
+            newNote();
+        }
         // Load active note
         setActiveNote(result.activeNote);
         // Load saved notes
