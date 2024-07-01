@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mdstyles.css">
+    <link rel="stylesheet" href="github.css">
+    <title>docket</title>
+</head>
+<body>
+    <div id="docketBody">
+        <div id="navBar">
+            <header>Docket > 
+                <h3 id="fileName" contenteditable="true"></h3>
+            </header>
+            <div id="noteOptions">
+                <button id="newNoteButton">📝</button>
+                <button id="deleteNoteButton">🗑️</button>
+            </div>
+            <div id="savedNotes"></div>
+        </div>
+        <textarea title="Input" id="mdEditor" class="bodyText" spellcheck="false"></textarea>
+        <div class="verticalLine"></div>
+        <div id="mdRender" class="bodyText"></div>
+    </div>
+    <script src="bundle.js"></script>
+</body>
+</html>
