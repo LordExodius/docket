@@ -1,6 +1,7 @@
 import { Marked, options } from 'marked'
 import DOMPurify from 'dompurify'
 import { markedHighlight } from 'marked-highlight'
+import markedFootnote from 'marked-footnote'
 import hljs from 'highlight.js/lib/core'
 // Import supported code languages (for size purposes)
 import c from 'highlight.js/lib/languages/c'
@@ -20,6 +21,21 @@ hljs.registerLanguage('python', python)
 hljs.registerLanguage('plaintext', plaintext)
 hljs.registerLanguage('rust', rust)
 hljs.registerLanguage('typescript', typescript)
+
+// Marked object
+const marked = new Marked(
+    {
+        gfm: true
+    },
+    markedHighlight({
+        langPrefix: 'hljs language-',
+        highlight(code, lang, info) {
+          const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+          return hljs.highlight(code, { language }).value
+        }
+      }),
+    markedFootnote()
+);
 
 const timeout = 0;
 interface UserNote {
@@ -56,20 +72,6 @@ const getActiveNote = (): UserNote => {
         lastUpdated: Date.now()
     }
 }
-
-// Marked object
-const marked = new Marked(
-    {
-        gfm: true
-    },
-    markedHighlight({
-        langPrefix: 'hljs language-',
-        highlight(code, lang, info) {
-          const language = hljs.getLanguage(lang) ? lang : 'plaintext'
-          return hljs.highlight(code, { language }).value
-        }
-      })
-);
 
 /**
  * Summary: Rerender markdown

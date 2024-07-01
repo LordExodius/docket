@@ -2643,7 +2643,7 @@
     }
 
     const markedInstance = new Marked();
-    function marked(src, opt) {
+    function marked$1(src, opt) {
         return markedInstance.parse(src, opt);
     }
     /**
@@ -2651,31 +2651,31 @@
      *
      * @param options Hash of options
      */
-    marked.options =
-        marked.setOptions = function (options) {
+    marked$1.options =
+        marked$1.setOptions = function (options) {
             markedInstance.setOptions(options);
-            marked.defaults = markedInstance.defaults;
-            changeDefaults(marked.defaults);
-            return marked;
+            marked$1.defaults = markedInstance.defaults;
+            changeDefaults(marked$1.defaults);
+            return marked$1;
         };
     /**
      * Gets the original marked default options.
      */
-    marked.getDefaults = _getDefaults;
-    marked.defaults = _defaults;
+    marked$1.getDefaults = _getDefaults;
+    marked$1.defaults = _defaults;
     /**
      * Use Extension
      */
-    marked.use = function (...args) {
+    marked$1.use = function (...args) {
         markedInstance.use(...args);
-        marked.defaults = markedInstance.defaults;
-        changeDefaults(marked.defaults);
-        return marked;
+        marked$1.defaults = markedInstance.defaults;
+        changeDefaults(marked$1.defaults);
+        return marked$1;
     };
     /**
      * Run callback for every token
      */
-    marked.walkTokens = function (tokens, callback) {
+    marked$1.walkTokens = function (tokens, callback) {
         return markedInstance.walkTokens(tokens, callback);
     };
     /**
@@ -2685,24 +2685,24 @@
      * @param options Hash of options
      * @return String of compiled HTML
      */
-    marked.parseInline = markedInstance.parseInline;
+    marked$1.parseInline = markedInstance.parseInline;
     /**
      * Expose
      */
-    marked.Parser = _Parser;
-    marked.parser = _Parser.parse;
-    marked.Renderer = _Renderer;
-    marked.TextRenderer = _TextRenderer;
-    marked.Lexer = _Lexer;
-    marked.lexer = _Lexer.lex;
-    marked.Tokenizer = _Tokenizer;
-    marked.Hooks = _Hooks;
-    marked.parse = marked;
-    marked.options;
-    marked.setOptions;
-    marked.use;
-    marked.walkTokens;
-    marked.parseInline;
+    marked$1.Parser = _Parser;
+    marked$1.parser = _Parser.parse;
+    marked$1.Renderer = _Renderer;
+    marked$1.TextRenderer = _TextRenderer;
+    marked$1.Lexer = _Lexer;
+    marked$1.lexer = _Lexer.lex;
+    marked$1.Tokenizer = _Tokenizer;
+    marked$1.Hooks = _Hooks;
+    marked$1.parse = marked$1;
+    marked$1.options;
+    marked$1.setOptions;
+    marked$1.use;
+    marked$1.walkTokens;
+    marked$1.parseInline;
     _Parser.parse;
     _Lexer.lex;
 
@@ -4351,6 +4351,127 @@
       }
 
       return html;
+    }
+
+    function p(t, l) {
+      const o = {
+        type: "footnotes",
+        raw: l,
+        rawItems: [],
+        items: []
+      };
+      return {
+        name: "footnote",
+        level: "block",
+        childTokens: ["content"],
+        tokenizer(r) {
+          t.hasFootnotes || (this.lexer.tokens.push(o), t.tokens = this.lexer.tokens, t.hasFootnotes = !0, o.rawItems = [], o.items = []);
+          const e = /^\[\^([^\]\n]+)\]:(?:[ \t]+|[\n]*?|$)([^\n]*?(?:\n|$)(?:\n*?[ ]{4,}[^\n]*)*)/.exec(
+            r
+          );
+          if (e) {
+            const [n, i, h = ""] = e;
+            let f = h.split(`
+`).reduce((c, s) => c + `
+` + s.replace(/^(?:[ ]{4}|[\t])/, ""), "");
+            const u = f.trimEnd().split(`
+`).pop();
+            f += // add lines after list, blockquote, codefence, and table
+            u && /^[ \t]*?[>\-\*][ ]|[`]{3,}$|^[ \t]*?[\|].+[\|]$/.test(
+              u
+            ) ? `
+
+` : "";
+            const a = {
+              type: "footnote",
+              raw: n,
+              label: i,
+              refs: [],
+              content: this.lexer.blockTokens(f)
+            };
+            return o.rawItems.push(a), a;
+          }
+        },
+        renderer() {
+          return "";
+        }
+      };
+    }
+    function $(t, l = !1) {
+      let o = 0;
+      return {
+        name: "footnoteRef",
+        level: "inline",
+        tokenizer(r) {
+          const e = /^\[\^([^\]\n]+)\]/.exec(r);
+          if (e) {
+            const [n, i] = e, h = this.lexer.tokens[0], f = h.rawItems.filter(
+              (s) => s.label === i
+            );
+            if (!f.length)
+              return;
+            const u = f[0], a = h.items.filter((s) => s.label === i)[0], c = {
+              type: "footnoteRef",
+              raw: n,
+              id: "",
+              label: i
+            };
+            return a ? (c.id = `${o}:${a.refs.length + 1}`, a.refs.push(c)) : (o++, c.id = String(o), u.refs.push(c), h.items.push(u)), c;
+          }
+        },
+        renderer({ id: r, label: e }) {
+          o = 0;
+          const n = encodeURIComponent(e);
+          return `<sup><a id="${t}ref-${n}" href="#${t + n}" data-${t}ref aria-describedby="${t}label">${l ? `[${r}]` : r}</a></sup>`;
+        }
+      };
+    }
+    function m(t) {
+      return {
+        name: "footnotes",
+        renderer({ raw: l, items: o = [] }) {
+          if (o.length === 0)
+            return "";
+          const r = o.reduce(
+            (n, { label: i, content: h, refs: f }) => {
+              const u = encodeURIComponent(i), a = this.parser.parse(h).trimEnd(), c = a.endsWith("</p>");
+              let s = `<li id="${t + u}">
+`;
+              return s += c ? a.replace(/<\/p>$/, "") : a, f.forEach((k, d) => {
+                s += ` <a href="#${t}ref-${u}" data-${t}backref aria-label="Back to reference ${i}">${d > 0 ? `↩<sup>${d + 1}</sup>` : "↩"}</a>`;
+              }), s += c ? `</p>
+` : `
+`, s += `</li>
+`, n + s;
+            },
+            ""
+          );
+          let e = `<section class="footnotes" data-footnotes>
+`;
+          return e += `<h2 id="${t}label" class="sr-only">${l.trimEnd()}</h2>
+`, e += `<ol>
+${r}</ol>
+`, e += `</section>
+`, e;
+        }
+      };
+    }
+    function b(t = {}) {
+      const {
+        prefixId: l = "footnote-",
+        description: o = "Footnotes",
+        refMarkers: r
+      } = t, e = { hasFootnotes: !1, tokens: [] };
+      return {
+        extensions: [
+          p(e, o),
+          $(l, r),
+          m(l)
+        ],
+        walkTokens(n) {
+          n.type === "footnotes" && e.tokens.indexOf(n) === 0 && n.items.length && (e.tokens[0] = { type: "space", raw: "" }, e.tokens.push(n)), e.hasFootnotes && (e.hasFootnotes = !1);
+        }
+      };
     }
 
     function getDefaultExportFromCjs (x) {
@@ -10536,6 +10657,16 @@
     HighlightJS.registerLanguage('plaintext', plaintext);
     HighlightJS.registerLanguage('rust', rust);
     HighlightJS.registerLanguage('typescript', typescript);
+    // Marked object
+    const marked = new Marked({
+        gfm: true
+    }, markedHighlight({
+        langPrefix: 'hljs language-',
+        highlight(code, lang, info) {
+            const language = HighlightJS.getLanguage(lang) ? lang : 'plaintext';
+            return HighlightJS.highlight(code, { language }).value;
+        }
+    }), b());
     const timeout = 0;
     let savedNotes = [];
     let currentUUID;
@@ -10562,19 +10693,11 @@
         };
     };
     /**
-     * Summary: Rerender markdown every {timeout}ms while typing, and also {timeout}ms after no input.
+     * Summary: Rerender markdown
      */
     const renderMarkdown = () => {
         const editorText = getEditorText();
-        const marked = new Marked({
-            gfm: true
-        }, markedHighlight({
-            langPrefix: 'hljs language-',
-            highlight(code, lang, info) {
-                const language = HighlightJS.getLanguage(lang) ? lang : 'plaintext';
-                return HighlightJS.highlight(code, { language }).value;
-            }
-        }));
+        // Parse markdown and sanitize HTML output
         document.getElementById("mdRender").innerHTML = purify.sanitize(marked.parse(editorText));
         // Reformat inline code blocks (PLACEHOLDER UNTIL RENDERER TAGS IMPLEMENTED)
         const codeBlocks = Array.from(document.getElementsByTagName("code"));
