@@ -33,19 +33,22 @@ let savedNotes: UserNote[] = [];
 let currentUUID: string;;
 
 /** 
- * Summary: Get sanitized editor text from HTML element
+ * Summary: Get editor text from HTML element
  **/ 
-const getCleanInput = () => {
-    const inputText = (<HTMLInputElement>document.getElementById("mdEditor")).value || ""
-    return DOMPurify.sanitize(inputText)
+const getEditorText = () => {
+    return (<HTMLInputElement>document.getElementById("mdEditor")).value || ""
+}
+
+const getNoteTitle = () => {
+    return (<HTMLElement>document.getElementById("fileName")).innerHTML
 }
 
 /**
  * @returns UserNote object containing title and body of currently active note
  */
 const getActiveNote = (): UserNote => {
-    const noteTitle = DOMPurify.sanitize((<HTMLElement>document.getElementById("fileName")).innerHTML)
-    const noteBody = getCleanInput()
+    const noteTitle = getNoteTitle()
+    const noteBody = getEditorText()
     return {
         uuid: currentUUID || self.crypto.randomUUID(),
         noteTitle: noteTitle,
@@ -54,26 +57,28 @@ const getActiveNote = (): UserNote => {
     }
 }
 
+// Marked object
+const marked = new Marked(
+    {
+        gfm: true
+    },
+    markedHighlight({
+        langPrefix: 'hljs language-',
+        highlight(code, lang, info) {
+          const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+          return hljs.highlight(code, { language }).value
+        }
+      })
+);
+
 /**
- * Summary: Rerender markdown every {timeout}ms while typing, and also {timeout}ms after no input.
+ * Summary: Rerender markdown
  */
-
 const renderMarkdown = () => {
-    const cleanText = getCleanInput();
-    const marked = new Marked(
-        {
-            gfm: true
-        },
-        markedHighlight({
-            langPrefix: 'hljs language-',
-            highlight(code, lang, info) {
-              const language = hljs.getLanguage(lang) ? lang : 'plaintext'
-              return hljs.highlight(code, { language }).value
-            }
-          })
-    );
+    const editorText = getEditorText();
 
-    (<HTMLElement>document.getElementById("mdRender")).innerHTML = marked.parse(cleanText) as keyof typeof String
+    // Parse markdown and sanitize HTML output
+    (<HTMLElement>document.getElementById("mdRender")).innerHTML = DOMPurify.sanitize(marked.parse(editorText) as keyof typeof String)
     
     // Reformat inline code blocks (PLACEHOLDER UNTIL RENDERER TAGS IMPLEMENTED)
     const codeBlocks = Array.from(document.getElementsByTagName("code"))

@@ -10540,18 +10540,20 @@
     let savedNotes = [];
     let currentUUID;
     /**
-     * Summary: Get sanitized editor text from HTML element
+     * Summary: Get editor text from HTML element
      **/
-    const getCleanInput = () => {
-        const inputText = document.getElementById("mdEditor").value || "";
-        return purify.sanitize(inputText);
+    const getEditorText = () => {
+        return document.getElementById("mdEditor").value || "";
+    };
+    const getNoteTitle = () => {
+        return document.getElementById("fileName").innerHTML;
     };
     /**
      * @returns UserNote object containing title and body of currently active note
      */
     const getActiveNote = () => {
-        const noteTitle = purify.sanitize(document.getElementById("fileName").innerHTML);
-        const noteBody = getCleanInput();
+        const noteTitle = getNoteTitle();
+        const noteBody = getEditorText();
         return {
             uuid: currentUUID || self.crypto.randomUUID(),
             noteTitle: noteTitle,
@@ -10563,7 +10565,7 @@
      * Summary: Rerender markdown every {timeout}ms while typing, and also {timeout}ms after no input.
      */
     const renderMarkdown = () => {
-        const cleanText = getCleanInput();
+        const editorText = getEditorText();
         const marked = new Marked({
             gfm: true
         }, markedHighlight({
@@ -10573,7 +10575,7 @@
                 return HighlightJS.highlight(code, { language }).value;
             }
         }));
-        document.getElementById("mdRender").innerHTML = marked.parse(cleanText);
+        document.getElementById("mdRender").innerHTML = purify.sanitize(marked.parse(editorText));
         // Reformat inline code blocks (PLACEHOLDER UNTIL RENDERER TAGS IMPLEMENTED)
         const codeBlocks = Array.from(document.getElementsByTagName("code"));
         codeBlocks.map((code) => {
