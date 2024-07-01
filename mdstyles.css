@@ -2,8 +2,12 @@
 
 #mdRender {
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.5;
+}
+
+#mdRender.popup {
+    font-size: 14px;
 }
 
 /* <pre> tags used for code blocks only */
@@ -11,6 +15,10 @@ pre:has(> code){
     padding: 10px;
     background-color: #f6f8fa;
     font-size: 14px;
+}
+
+strong {
+    font-weight: 500;
 }
 
 code {
