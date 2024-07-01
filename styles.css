@@ -143,8 +143,8 @@ textarea:focus {
     background-color: #e3e6e9;
 }
 
-.flexgrow {
-    flex-grow: 1;
+.dropdown {
+    border-bottom: 1px solid #e3e6e9;
 }
 
 .popup {

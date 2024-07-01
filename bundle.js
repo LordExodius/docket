@@ -10743,7 +10743,7 @@ ${r}</ol>
         else {
             newNote();
         }
-        syncSavedNotes();
+        upsertSavedNotes();
     };
     const savedNoteHandler = (uuid) => {
         const userNote = getNoteByUUID(uuid);
@@ -10780,7 +10780,7 @@ ${r}</ol>
             renderMarkdown();
             saveActiveNote();
             archiveActiveNote();
-            syncSavedNotes();
+            upsertSavedNotes();
         }
     };
     /**
@@ -10797,14 +10797,14 @@ ${r}</ol>
             renderMarkdown();
             saveActiveNote();
             archiveActiveNote();
-            syncSavedNotes();
+            upsertSavedNotes();
             lastExecuted.msSinceLastUpdate = currTime;
         }
     };
     /**
      * Sync savedNotes variable to local storage
      */
-    const syncSavedNotes = () => {
+    const upsertSavedNotes = () => {
         chrome.storage.local.set({ savedNotes: savedNotes }, () => {
             renderSavedNotes();
         });
@@ -10814,7 +10814,7 @@ ${r}</ol>
      */
     const archiveActiveNote = () => {
         setNoteByUUID(currentUUID, getActiveNote());
-        syncSavedNotes();
+        upsertSavedNotes();
     };
     /**
      * Summary: Start a new note and archive the currently active note
@@ -10848,7 +10848,7 @@ ${r}</ol>
             setActiveNote(result.activeNote);
             // Load saved notes
             savedNotes = result.savedNotes || [];
-            syncSavedNotes();
+            upsertSavedNotes();
         });
     };
     window.onload = runPreload;
