@@ -1,17 +1,18 @@
-# docket
-locally saved markdown notes in new tab 📝
+# Docket
+locally saved markdown notes in a new tab or popup 📝
 
-### to build (optional)
+### Installation
+1. Clone or download this repo and unzip (if you downloaded a zip file).
+2. Go to `chrome://extensions/` or wherever you manage extensions.
+3. Enable developer mode and click `load unpacked`.
+4. Select the unzipped or root folder.
+
+Done!
+
+### Build
 1. `npm install`
-2. `npm run build`
+3. `npm run build`
 
-### to install
-1. download [docket.zip]()
-2. unzip
-3. go to `chrome://extensions/` or wherever you manage extensions
-4. enable developer mode
-5. click `load unpacked`
-6. select the unzipped folder
 
 ### layout
 - [manifest](manifest.json) holds extension metadata
