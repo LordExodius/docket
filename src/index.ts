@@ -1,4 +1,4 @@
-import { Marked } from 'marked'
+import { Marked, options } from 'marked'
 import DOMPurify from 'dompurify'
 import { markedHighlight } from 'marked-highlight'
 import hljs from 'highlight.js/lib/core'
@@ -23,16 +23,35 @@ hljs.registerLanguage('typescript', typescript)
 
 const timeout = 0;
 interface UserNote {
+    uuid: string,
     noteTitle: string,
-    noteBody: string
+    noteBody: string,
+    lastUpdated: number
+}
+
+let savedNotes: UserNote[] = [];
+let currentUUID: string;;
+
+/** 
+ * Summary: Get sanitized editor text from HTML element
+ **/ 
+const getCleanInput = () => {
+    const inputText = (<HTMLInputElement>document.getElementById("mdEditor")).value || ""
+    return DOMPurify.sanitize(inputText)
 }
 
 /**
- * Summary: Get sanitized input text body
+ * @returns UserNote object containing title and body of currently active note
  */
-const getCleanInput = () => {
-    const inputText = (<HTMLInputElement>document.getElementById("textInput")).value || ""
-    return DOMPurify.sanitize(inputText)
+const getActiveNote = (): UserNote => {
+    const noteTitle = DOMPurify.sanitize((<HTMLElement>document.getElementById("fileName")).innerHTML)
+    const noteBody = getCleanInput()
+    return {
+        uuid: currentUUID || self.crypto.randomUUID(),
+        noteTitle: noteTitle,
+        noteBody: noteBody,
+        lastUpdated: Date.now()
+    }
 }
 
 /**
@@ -42,13 +61,16 @@ const getCleanInput = () => {
 const renderMarkdown = () => {
     const cleanText = getCleanInput();
     const marked = new Marked(
+        {
+            gfm: true
+        },
         markedHighlight({
-          langPrefix: 'hljs language-',
-          highlight(code, lang, info) {
-            const language = hljs.getLanguage(lang) ? lang : 'plaintext'
-            return hljs.highlight(code, { language }).value
-          }
-        })
+            langPrefix: 'hljs language-',
+            highlight(code, lang, info) {
+              const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+              return hljs.highlight(code, { language }).value
+            }
+          })
     );
 
     (<HTMLElement>document.getElementById("mdRender")).innerHTML = marked.parse(cleanText) as keyof typeof String
@@ -64,26 +86,64 @@ const renderMarkdown = () => {
     })
 }
 
-/**
- * Summary: Fetch all saved notes from localStorage
- */
-
-const populateNavBar = () => {
-    chrome.storage.local.get("notes", (result) => {
-        console.log(result.value)
-    })
+const getNoteByUUID = (uuid: string) => {
+    console.log("scanning notes")
+    for (let i = 0; i < savedNotes.length; i++) {
+        if (savedNotes[i].uuid == uuid) {
+            return savedNotes[i]
+        }
+    }
 }
 
-/**
- * @returns UserNote object containing title and body of currently active note
- */
-const getActiveNote = (): UserNote => {
-    const noteTitle = DOMPurify.sanitize((<HTMLElement>document.getElementById("fileName")).innerHTML)
-    const noteBody = getCleanInput()
-    return {
-        noteTitle: noteTitle,
-        noteBody: noteBody
+const setNoteByUUID = (uuid: string, note: UserNote) => {
+    console.log(`setting note with uuid ${uuid}`)
+    for (let i = 0; i < savedNotes.length; i++) {
+        if (savedNotes[i].uuid == uuid) {
+            savedNotes[i] = note;
+            return; 
+        }
     }
+    savedNotes.push(note);
+}
+
+const deleteNoteByUUID = (uuid: string) => {
+    const remaining = savedNotes.filter((note: UserNote) => {
+        if (note.uuid == uuid) {
+            console.log("remove this one")
+            return false
+        } return true
+    })
+    savedNotes = remaining;
+    // Automatically open the next available note, else create a new note
+    if(savedNotes.length > 0) {
+        setActiveNote(savedNotes[0]);
+    } else {
+        newNote();
+    }
+    syncSavedNotes();
+}
+
+const savedNoteHandler = (uuid: string) => {
+    const userNote = getNoteByUUID(uuid);
+    setActiveNote(userNote!);
+}
+
+const renderSavedNotes = () => {
+    // Sort notes by last updated time
+    savedNotes.sort((a, b) => {
+        return b.lastUpdated - a.lastUpdated 
+    })
+    // Load all saved notes to the navbar
+    const noteList = document.getElementById("savedNotes");
+    (<HTMLElement>noteList).innerHTML = "";
+    savedNotes.forEach((note: UserNote) => {
+        let noteLink: HTMLAnchorElement = document.createElement("a");
+        noteLink.innerHTML = note.noteTitle;
+        noteLink.className = "savedNoteLink";
+        noteLink.addEventListener("click", savedNoteHandler.bind(null, note.uuid));
+        (<HTMLElement>noteList).appendChild(noteLink);
+        (<HTMLElement>noteList).appendChild(document.createElement("br"));
+    })
 }
 
 /**
@@ -92,19 +152,8 @@ const getActiveNote = (): UserNote => {
 const saveActiveNote = () => {
     const userNote = getActiveNote()
     chrome.storage.local.set({activeNote: userNote})
-    console.log("Note Saved")
 }
 
-/**
- * Summary: Autoload active note on new tab from chrome local storage
- */
-const loadActiveNote = () => {
-    chrome.storage.local.get(null, (result) => {
-        (<HTMLElement>document.getElementById("fileName")).innerHTML = (<UserNote>result.activeNote).noteTitle;
-        (<HTMLInputElement>document.getElementById("textInput")).value = (<UserNote>result.activeNote).noteBody;
-        renderMarkdown();
-    })
-}
 interface LastExecuted {
     msSinceLastInput: number,
     msSinceLastUpdate: number
@@ -113,11 +162,18 @@ interface LastExecuted {
 // Debounce rendering to rerender after no input detected for {timeout}ms
 const debounce = (lastExecuted: LastExecuted) => {
     if (Date.now() - lastExecuted.msSinceLastInput > timeout) {
+        console.log("Debounce")
         renderMarkdown()
         saveActiveNote()
+        archiveActiveNote()
+        syncSavedNotes()
     }
 }
 
+/**
+ * Input handler for updates to the markdown editor/title
+ * @param lastExecuted 
+ */
 const handleInput = (lastExecuted: LastExecuted) => {
     let currTime = Date.now()
     // debounce
@@ -127,30 +183,102 @@ const handleInput = (lastExecuted: LastExecuted) => {
     // rerender every 500ms while typing
     if (currTime - lastExecuted.msSinceLastUpdate > timeout) {
         renderMarkdown()
+        saveActiveNote()
+        archiveActiveNote()
+        syncSavedNotes()
         lastExecuted.msSinceLastUpdate = currTime
     }
 }
 
-window.onload = loadActiveNote;
+/**
+ * Sync savedNotes variable to local storage
+ */
+const syncSavedNotes = () => {
+    chrome.storage.local.set({savedNotes: savedNotes}, () => {
+        renderSavedNotes();
+    })
+}
 
-// Add event listener to the editable side
-const textInput = <HTMLInputElement>document.getElementById("textInput")
+/**
+ * Save currently active note to savedNotes and localStorage
+ */
+const archiveActiveNote = () => {
+    setNoteByUUID(currentUUID, getActiveNote())
+    syncSavedNotes();
+}
 
-textInput.addEventListener("input", 
+/**
+ * Summary: Start a new note and archive the currently active note
+ */
+const newNote = () => {
+    setActiveNote({
+        uuid: self.crypto.randomUUID(), 
+        noteTitle: "new note", 
+        noteBody: "", 
+        lastUpdated: Date.now()});
+}
+
+// AUTOLOADING
+
+const setActiveNote = (userNote: UserNote) => {
+    currentUUID = userNote.uuid;
+    (<HTMLElement>document.getElementById("fileName")).innerHTML = userNote.noteTitle;
+    (<HTMLInputElement>document.getElementById("mdEditor")).value = userNote.noteBody;
+    saveActiveNote();
+    archiveActiveNote();
+    renderMarkdown();
+}
+
+const deleteActiveNote = () => {
+    deleteNoteByUUID(currentUUID)
+}
+
+const runPreload = () => {
+    chrome.storage.local.get(null, (result) => {
+        // Load active note
+        setActiveNote(result.activeNote);
+        // Load saved notes
+        savedNotes = result.savedNotes || [];
+        syncSavedNotes();
+    })
+}
+
+window.onload = runPreload;
+
+const deleteNoteButton = <HTMLButtonElement>document.getElementById("deleteNoteButton")
+deleteNoteButton.addEventListener("click", deleteActiveNote)
+
+// NEWNOTE EVENT LISTENER
+const newNoteButton = <HTMLButtonElement>document.getElementById("newNoteButton")
+newNoteButton.addEventListener("click", newNote)
+
+// EDITOR EVENT LISTENERS
+const mdEditor = <HTMLInputElement>document.getElementById("mdEditor")
+const mdTitle = <HTMLElement>document.getElementById("fileName")
+
+mdEditor.addEventListener("input", 
     handleInput.bind(undefined, {
         msSinceLastInput: Date.now(),
         msSinceLastUpdate: Date.now()
-    }))
+    })
+)
+
+mdTitle.addEventListener("input", 
+    handleInput.bind(undefined, {
+        msSinceLastInput: Date.now(),
+        msSinceLastUpdate: Date.now()
+    })
+)
 
 // Override default tab behaviour
-textInput.addEventListener("keydown", 
+mdEditor.addEventListener("keydown", 
     (e) => {
         if (e.key === "Tab") {
             e.preventDefault()
-            textInput.setRangeText(
+            mdEditor.setRangeText(
                 "\t",
-                textInput.selectionStart || 0,
-                textInput.selectionEnd || 0,
+                mdEditor.selectionStart || 0,
+                mdEditor.selectionEnd || 0,
                 "end"
             )
         }

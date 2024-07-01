@@ -11,10 +11,16 @@
 <body>
     <div id="docketBody">
         <div id="navBar">
-            <header>Docket > <h3 id="fileName" contenteditable="true"></h3></header>
-            <hr>
+            <header>Docket > 
+                <h3 id="fileName" contenteditable="true"></h3>
+            </header>
+            <div id="noteOptions">
+                <button id="newNoteButton">📝</button>
+                <button id="deleteNoteButton">🗑️</button>
+            </div>
+            <div id="savedNotes"></div>
         </div>
-        <textarea title="Input" id="textInput" class="bodyText"></textarea>
+        <textarea title="Input" id="mdEditor" class="bodyText" spellcheck="false"></textarea>
         <div id="mdRender" class="bodyText"></div>
     </div>
     <script src="../dist/bundle.js"></script>

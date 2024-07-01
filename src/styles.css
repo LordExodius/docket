@@ -4,27 +4,15 @@ body {
     padding: 10px;
 }
 
-h1, h2, h3,
-h4, h5, h6 {
-    font-weight: 600;
-}
-
-a:link {
-    text-decoration: none;
-    color: #489ae3;
-}
-a:visited {
-    text-decoration: none;
-    color: #489ae3;
-}
-a:hover {
-    text-decoration: underline;
+button {
+    margin-bottom: 16px;
 }
 
 /* The place you type */
-textarea {
-    font-family: system-ui,-apple-system,BlinkMacSystemFont, "Segoe UI","Ubuntu","Roboto", "Noto Sans", "Droid Sans",sans-serif;
-    font-size: 16px;
+#mdEditor {
+    font-family: ui-monospace,"Cascadia Mono","Segoe UI Mono","Ubuntu Mono","Roboto Mono",Menlo, Monaco, Consolas,monospace; 
+    font-weight: 350;
+    line-height: 2ch;
     resize: none;
     border: 0;
 }
@@ -42,10 +30,37 @@ textarea:focus {
 }
 
 #navBar {
-    flex-grow: 0.5;
-    width: 0;
+    /* flex-grow: 0.5; */
+    width: 150px;
     background-color: #f6f8fa;
     padding: 10px;
+}
+
+#mdRender {
+    overflow: scroll;
+}
+
+#savedNotes {
+    line-height: 1.5;
+}
+
+#fileName {
+    border-bottom: 1px solid #b0b5b9;
+}
+
+#noteOptions {
+    display: flex;
+    gap: 10px
+}
+
+#newNoteButton {
+    flex-grow: 5;
+    width: 0
+}
+
+#deleteNoteButton{
+    flex-grow: 1;
+    width: 0;
 }
 
 .bodyText {
@@ -54,4 +69,8 @@ textarea:focus {
     flex-grow: 2;
     height: calc(100% - 20px);
     padding: 10px
+}
+
+.savedNoteLink {
+    margin-bottom: 16px;
 }

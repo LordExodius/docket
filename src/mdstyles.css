@@ -22,3 +22,36 @@ code {
 p {
     font-size: 16px;
 }
+
+h1, h2, h3,
+h4, h5, h6,
+p, blockquote, pre {
+    margin: 0 0 16px;
+}
+
+h1, h2, h3,
+h4, h5, h6 {
+    font-weight: 600;
+}
+
+h1, h2 {
+    border-bottom: 1px solid #dee3e8;
+}
+
+blockquote {
+    padding: 0 16px;
+    border-left: 4px solid #dee3e8;
+    background-color: #f6f8fa;
+}
+
+a:link {
+    text-decoration: none;
+    color: #489ae3;
+}
+a:visited {
+    text-decoration: none;
+    color: #489ae3;
+}
+a:hover {
+    text-decoration: underline;
+}
