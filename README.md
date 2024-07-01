@@ -2,7 +2,10 @@
 locally saved markdown notes in a new tab or popup 📝
 
 ### Screenshots
-<img src="https://github.com/LordExodius/docket/assets/26910397/24da96b2-ddc7-49a8-a0b0-3b1ad9588bfd" width="80%"></img>
+<div align="center">
+<img src="https://github.com/LordExodius/docket/assets/26910397/24da96b2-ddc7-49a8-a0b0-3b1ad9588bfd" width="80%"><br>
+  <em>this is docket running in a new tab!</em>
+</div>
 
 ### Installation
 1. Clone or download this repo and unzip (if you downloaded a zip file).
@@ -16,7 +19,7 @@ Done!
 1. `npm install`
 3. `npm run build`
 
-### layout
+### Layout
 - [manifest](manifest.json) holds extension metadata
 - [icons](icons/) holds extension icon
 - [src](src/) holds typescript source code
