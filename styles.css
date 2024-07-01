@@ -66,11 +66,11 @@ textarea:focus {
 
 #mdRender {
     overflow: scroll;
+    overflow-x: hidden;
 }
 
 #mdRender.popup {
     width: calc(100% - 20px);
-    overflow-x: hidden;
 }
 
 #savedNotes {
