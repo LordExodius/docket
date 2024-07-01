@@ -127,7 +127,7 @@ const deleteNoteByUUID = (uuid: string) => {
     } else {
         newNote();
     }
-    syncSavedNotes();
+    upsertSavedNotes();
 }
 
 const savedNoteHandler = (uuid: string) => {
@@ -172,8 +172,8 @@ const debounce = (lastExecuted: LastExecuted) => {
         console.log("Debounce")
         renderMarkdown()
         saveActiveNote()
-        archiveActiveNote()
-        syncSavedNotes()
+        upsertActiveNote()
+        upsertSavedNotes()
     }
 }
 
@@ -191,31 +191,31 @@ const handleInput = (lastExecuted: LastExecuted) => {
     if (currTime - lastExecuted.msSinceLastUpdate > timeout) {
         renderMarkdown()
         saveActiveNote()
-        archiveActiveNote()
-        syncSavedNotes()
+        upsertActiveNote()
+        upsertSavedNotes()
         lastExecuted.msSinceLastUpdate = currTime
     }
 }
 
 /**
- * Sync savedNotes variable to local storage
+ * Upsert savedNotes variable to local storage
  */
-const syncSavedNotes = () => {
+const upsertSavedNotes = () => {
     chrome.storage.local.set({savedNotes: savedNotes}, () => {
         renderSavedNotes();
     })
 }
 
 /**
- * Save currently active note to savedNotes and localStorage
+ * Upsert currently active note to savedNotes and localStorage
  */
-const archiveActiveNote = () => {
+const upsertActiveNote = () => {
     setNoteByUUID(currentUUID, getActiveNote())
-    syncSavedNotes();
+    upsertSavedNotes();
 }
 
 /**
- * Summary: Start a new note and archive the currently active note
+ * Summary: Start a new note and upsert the previously active note
  */
 const newNote = () => {
     setActiveNote({
@@ -232,7 +232,7 @@ const setActiveNote = (userNote: UserNote) => {
     (<HTMLElement>document.getElementById("fileName")).innerHTML = userNote.noteTitle;
     (<HTMLInputElement>document.getElementById("mdEditor")).value = userNote.noteBody;
     saveActiveNote();
-    archiveActiveNote();
+    upsertActiveNote();
     renderMarkdown();
 }
 
@@ -247,7 +247,7 @@ const runPreload = () => {
         setActiveNote(result.activeNote);
         // Load saved notes
         savedNotes = result.savedNotes || [];
-        syncSavedNotes();
+        upsertSavedNotes();
     })
 }
 
