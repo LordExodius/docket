@@ -39,7 +39,6 @@ textarea:focus {
 #navBar {
     /* flex-grow: 0.5; */
     width: 150px;
-    background-color: #f6f8fa;
     padding: 10px;
 }
 
@@ -150,4 +149,18 @@ textarea:focus {
 .popup {
     width: 400px;
     overflow-y: hidden;
+}
+
+.dark {
+    background-color: #1e1e1e;
+    color: #f6f8fa;
+}
+
+.dark-navbar {
+    background-color: #2e2e2e;
+    color: #f6f8fa;
+}
+
+.light-navbar {
+    background-color: #f6f8fa;
 }
