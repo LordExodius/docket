@@ -143,7 +143,7 @@ const debounce = (lastExecuted) => {
         console.log("Debounce");
         renderMarkdown();
         saveActiveNote();
-        archiveActiveNote();
+        upsertActiveNote();
         upsertSavedNotes();
     }
 };
@@ -160,13 +160,13 @@ const handleInput = (lastExecuted) => {
     if (currTime - lastExecuted.msSinceLastUpdate > timeout) {
         renderMarkdown();
         saveActiveNote();
-        archiveActiveNote();
+        upsertActiveNote();
         upsertSavedNotes();
         lastExecuted.msSinceLastUpdate = currTime;
     }
 };
 /**
- * Sync savedNotes variable to local storage
+ * Upsert savedNotes variable to local storage
  */
 const upsertSavedNotes = () => {
     chrome.storage.local.set({ savedNotes: savedNotes }, () => {
@@ -174,14 +174,14 @@ const upsertSavedNotes = () => {
     });
 };
 /**
- * Save currently active note to savedNotes and localStorage
+ * Upsert currently active note to savedNotes and localStorage
  */
-const archiveActiveNote = () => {
+const upsertActiveNote = () => {
     setNoteByUUID(currentUUID, getActiveNote());
     upsertSavedNotes();
 };
 /**
- * Summary: Start a new note and archive the currently active note
+ * Summary: Start a new note and upsert the previously active note
  */
 const newNote = () => {
     setActiveNote({
@@ -197,7 +197,7 @@ const setActiveNote = (userNote) => {
     document.getElementById("fileName").innerHTML = userNote.noteTitle;
     document.getElementById("mdEditor").value = userNote.noteBody;
     saveActiveNote();
-    archiveActiveNote();
+    upsertActiveNote();
     renderMarkdown();
 };
 const deleteActiveNote = () => {
