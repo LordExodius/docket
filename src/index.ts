@@ -22,6 +22,12 @@ hljs.registerLanguage('plaintext', plaintext)
 hljs.registerLanguage('rust', rust)
 hljs.registerLanguage('typescript', typescript)
 
+const uiTheme = localStorage.getItem("ui-theme") ?? "light";
+
+document.body.classList.add(uiTheme);
+document.getElementById("navBar")?.classList.add(uiTheme + "-navbar");
+document.getElementById("mdEditor")?.classList.add(uiTheme);
+
 // Marked object
 const marked = new Marked(
     {
