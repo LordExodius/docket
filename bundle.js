@@ -10736,6 +10736,7 @@ ${r}</ol>
             return true;
         });
         savedNotes = remaining;
+        upsertSavedNotes();
         // Automatically open the next available note, else create a new note
         if (savedNotes.length > 0) {
             setActiveNote(savedNotes[0]);
@@ -10743,7 +10744,6 @@ ${r}</ol>
         else {
             newNote();
         }
-        upsertSavedNotes();
     };
     const savedNoteHandler = (uuid) => {
         const userNote = getNoteByUUID(uuid);
@@ -10779,7 +10779,7 @@ ${r}</ol>
             console.log("Debounce");
             renderMarkdown();
             saveActiveNote();
-            archiveActiveNote();
+            upsertActiveNote();
             upsertSavedNotes();
         }
     };
@@ -10796,13 +10796,13 @@ ${r}</ol>
         if (currTime - lastExecuted.msSinceLastUpdate > timeout) {
             renderMarkdown();
             saveActiveNote();
-            archiveActiveNote();
+            upsertActiveNote();
             upsertSavedNotes();
             lastExecuted.msSinceLastUpdate = currTime;
         }
     };
     /**
-     * Sync savedNotes variable to local storage
+     * Upsert savedNotes variable to local storage
      */
     const upsertSavedNotes = () => {
         chrome.storage.local.set({ savedNotes: savedNotes }, () => {
@@ -10810,21 +10810,45 @@ ${r}</ol>
         });
     };
     /**
-     * Save currently active note to savedNotes and localStorage
+     * Upsert currently active note to savedNotes and localStorage
      */
-    const archiveActiveNote = () => {
+    const upsertActiveNote = () => {
         setNoteByUUID(currentUUID, getActiveNote());
         upsertSavedNotes();
     };
+    const getNoteNames = () => {
+        return new Promise((resolve, reject) => {
+            chrome.storage.local.get("savedNotes", (result) => {
+                var _a;
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                }
+                else {
+                    const noteNames = ((_a = result.savedNotes) === null || _a === void 0 ? void 0 : _a.map((note) => note.noteTitle)) || [];
+                    resolve(noteNames);
+                }
+            });
+        });
+    };
     /**
-     * Summary: Start a new note and archive the currently active note
+     * Summary: Start a new note and upsert the previously active note
      */
     const newNote = () => {
-        setActiveNote({
-            uuid: self.crypto.randomUUID(),
-            noteTitle: "new note",
-            noteBody: "",
-            lastUpdated: Date.now()
+        getNoteNames().then((notes) => {
+            let newNoteName = "new note";
+            console.log('note names:', notes, notes.includes(newNoteName));
+            let i = 0;
+            while (notes.includes(newNoteName)) {
+                i++;
+                newNoteName = `new note (${i})`;
+                console.log('new note name:', newNoteName, notes.includes(newNoteName));
+            }
+            setActiveNote({
+                uuid: self.crypto.randomUUID(),
+                noteTitle: newNoteName,
+                noteBody: "",
+                lastUpdated: Date.now()
+            });
         });
     };
     // AUTOLOADING
@@ -10833,7 +10857,7 @@ ${r}</ol>
         document.getElementById("fileName").innerHTML = userNote.noteTitle;
         document.getElementById("mdEditor").value = userNote.noteBody;
         saveActiveNote();
-        archiveActiveNote();
+        upsertActiveNote();
         renderMarkdown();
     };
     const deleteActiveNote = () => {
