@@ -121,13 +121,13 @@ const deleteNoteByUUID = (uuid: string) => {
         } return true
     })
     savedNotes = remaining;
+    upsertSavedNotes();
     // Automatically open the next available note, else create a new note
     if(savedNotes.length > 0) {
         setActiveNote(savedNotes[0]);
     } else {
         newNote();
     }
-    upsertSavedNotes();
 }
 
 const savedNoteHandler = (uuid: string) => {
@@ -214,15 +214,38 @@ const upsertActiveNote = () => {
     upsertSavedNotes();
 }
 
+const getNoteNames = (): Promise<string[]> => {
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.get("savedNotes", (result) => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+        } else {
+          const noteNames = result.savedNotes?.map((note: UserNote) => note.noteTitle) || [];
+          resolve(noteNames);
+        }
+      });
+    });
+  };
+
 /**
  * Summary: Start a new note and upsert the previously active note
  */
 const newNote = () => {
-    setActiveNote({
-        uuid: self.crypto.randomUUID(), 
-        noteTitle: "new note", 
-        noteBody: "", 
-        lastUpdated: Date.now()});
+    getNoteNames().then((notes) => {
+        let newNoteName = "new note";
+        console.log('note names:', notes, notes.includes(newNoteName));
+        let i = 0;
+        while (notes.includes(newNoteName)) {
+            i++;
+            newNoteName = `new note (${i})`;
+            console.log('new note name:', newNoteName, notes.includes(newNoteName));
+        }
+        setActiveNote({
+            uuid: self.crypto.randomUUID(), 
+            noteTitle: newNoteName, 
+            noteBody: "", 
+            lastUpdated: Date.now()});
+    });
 }
 
 // AUTOLOADING
