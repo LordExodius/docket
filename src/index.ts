@@ -301,7 +301,7 @@ const testCodeBackground = (): string => {
     return background
 }
 
-const setCodeStyle = () => {
+const updateCodeStyle = () => {
     // clear old stylesheet if exists
     const oldStyleSheet = document.getElementById("codeStylesheet")
     if (oldStyleSheet) {
@@ -321,7 +321,7 @@ const setCodeStyle = () => {
     if (codeStyle === "github") {
         (<HTMLElement>document.querySelector(":root")).style.setProperty("--default-code-background", "#f6f8fa");
     } else {
-        setTimeout(() => {(<HTMLElement>document.querySelector(":root")).style.setProperty("--default-code-background", testCodeBackground());}, 20)
+        setTimeout(() => {(<HTMLElement>document.querySelector(":root")).style.setProperty("--default-code-background", testCodeBackground());}, 50)
     }
     
 }
@@ -344,7 +344,7 @@ const runPreload = () => {
         codeStyle = result.codeStyle || "github"
         const codeStyleDropdown = <HTMLSelectElement>document.getElementById("codeStyleDropdown")
         codeStyleDropdown.value = codeStyle
-        setCodeStyle();
+        updateCodeStyle();
     })
 }
 
@@ -352,7 +352,7 @@ window.onload = runPreload;
 
 // CODESTYLE EVENT LISTENER
 const codeStyleDropdown = <HTMLSelectElement>document.getElementById("codeStyleDropdown")
-codeStyleDropdown.addEventListener("change", setCodeStyle)
+codeStyleDropdown.addEventListener("change", updateCodeStyle)
 
 // DARKMODE EVENT LISTENER
 const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
