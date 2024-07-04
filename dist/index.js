@@ -21,6 +21,7 @@ hljs.registerLanguage('plaintext', plaintext);
 hljs.registerLanguage('rust', rust);
 hljs.registerLanguage('typescript', typescript);
 let darkMode = false;
+let uiTheme = "light";
 // Marked object
 const marked = new Marked({
     gfm: true
@@ -66,16 +67,20 @@ const renderMarkdown = () => {
     document.getElementById("mdRender").innerHTML = DOMPurify.sanitize(marked.parse(editorText));
     // Reformat inline code blocks (PLACEHOLDER UNTIL RENDERER TAGS IMPLEMENTED)
     const codeBlocks = Array.from(document.getElementsByTagName("code"));
-    codeBlocks.map((code) => {
+    codeBlocks.forEach((code) => {
         const parent = code.parentElement;
+        code.setAttribute("data-theme", uiTheme);
         if (parent.tagName != "PRE") {
             code.style.padding = ".2em .4em";
             code.style.borderRadius = "5px";
         }
+        else {
+            parent.setAttribute("data-theme", uiTheme);
+        }
     });
 };
 const getNoteByUUID = (uuid) => {
-    console.log("scanning notes");
+    // console.log("scanning notes")
     for (let i = 0; i < savedNotes.length; i++) {
         if (savedNotes[i].uuid == uuid) {
             return savedNotes[i];
@@ -83,7 +88,7 @@ const getNoteByUUID = (uuid) => {
     }
 };
 const setNoteByUUID = (uuid, note) => {
-    console.log(`setting note with uuid ${uuid}`);
+    // console.log(`setting note with uuid ${uuid}`)
     for (let i = 0; i < savedNotes.length; i++) {
         if (savedNotes[i].uuid == uuid) {
             savedNotes[i] = note;
@@ -95,7 +100,7 @@ const setNoteByUUID = (uuid, note) => {
 const deleteNoteByUUID = (uuid) => {
     const remaining = savedNotes.filter((note) => {
         if (note.uuid == uuid) {
-            console.log("remove this one");
+            // console.log("remove this one")
             return false;
         }
         return true;
@@ -141,7 +146,7 @@ const saveActiveNote = () => {
 // Debounce rendering to rerender after no input detected for {timeout}ms
 const debounce = (lastExecuted) => {
     if (Date.now() - lastExecuted.msSinceLastInput > timeout) {
-        console.log("Debounce");
+        // console.log("Debounce")
         renderMarkdown();
         saveActiveNote();
         upsertActiveNote();
@@ -215,10 +220,12 @@ const toggleDarkMode = () => {
     darkMode = darkModeToggle.checked;
     chrome.storage.sync.set({ darkMode: darkMode });
     if (darkMode) {
-        setTheme("dark");
+        uiTheme = "dark";
+        setTheme(uiTheme);
     }
     else {
-        setTheme("light");
+        uiTheme = "light";
+        setTheme(uiTheme);
     }
 };
 const runPreload = () => {
