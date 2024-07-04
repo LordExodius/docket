@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="github.css">
     <title>docket</title>
 </head>
-<body>
+<body data-theme="light">
     <div id="docketBody">
-        <div id="navBar">
+        <div id="navBar" data-theme="light">
             <header>Docket > 
                 <h3 id="fileName" contenteditable="true"></h3> 
             </header>
@@ -19,10 +19,17 @@
                 <button id="deleteNoteButton">🗑️</button>
             </div>
             <div id="savedNotes" style="cursor: pointer;"></div>
+            <footer id="navFooter">
+                <label class="switch">
+                    <input id="darkModeToggle" type="checkbox">
+                    <span class="slider">Dark Mode</span>
+                </label>
+            </footer>
         </div>
-        <textarea title="Input" id="mdEditor" class="bodyText" spellcheck="false"></textarea>
+
+        <textarea title="Input" id="mdEditor" class="bodyText" spellcheck="false" data-theme="light"></textarea>
         <div class="verticalLine"></div>
-        <div id="mdRender" class="bodyText"></div>
+        <div id="mdRender" class="bodyText" data-theme="light"></div>
     </div>
     <script src="bundle.js"></script>
 </body>

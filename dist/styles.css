@@ -20,6 +20,23 @@ textarea:focus {
     outline-width: 0;
 }
 
+/* Stupid dark mode toggle >:( */
+span.slider {
+    vertical-align: middle;
+}
+input[type="checkbox"] {
+    vertical-align: middle;
+}
+
+#navFooter {
+    width: inherit;
+    display: inline-block;
+    justify-content: left;
+    vertical-align: middle;
+    position: absolute;
+    bottom: 20px;
+}
+
 #docketBody {
     display: flex;
     flex-wrap: wrap;
@@ -151,16 +168,20 @@ textarea:focus {
     overflow-y: hidden;
 }
 
-.dark {
+[data-theme="dark"] {
     background-color: #1e1e1e;
     color: #f6f8fa;
 }
 
-.dark-navbar {
+code[data-theme="dark"] {
+    background-color: #2e2e2e;
+}
+
+#navBar[data-theme="dark"] {
     background-color: #2e2e2e;
     color: #f6f8fa;
 }
 
-.light-navbar {
+#navBar[data-theme="light"] {
     background-color: #f6f8fa;
 }

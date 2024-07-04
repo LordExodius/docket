@@ -22,11 +22,7 @@ hljs.registerLanguage('plaintext', plaintext)
 hljs.registerLanguage('rust', rust)
 hljs.registerLanguage('typescript', typescript)
 
-const uiTheme = localStorage.getItem("ui-theme") ?? "light";
-
-document.body.classList.add(uiTheme);
-document.getElementById("navBar")?.classList.add(uiTheme + "-navbar");
-document.getElementById("mdEditor")?.classList.add(uiTheme);
+let darkMode = false;
 
 // Marked object
 const marked = new Marked(
@@ -246,7 +242,33 @@ const deleteActiveNote = () => {
     deleteNoteByUUID(currentUUID)
 }
 
+const setTheme = (theme: string) => {
+    const themedElements = document.querySelectorAll("[data-theme]")
+    themedElements.forEach((element) => {
+        element.setAttribute("data-theme", theme)
+    })
+}
+
+const toggleDarkMode = () => {
+    const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
+    darkMode = darkModeToggle.checked
+    chrome.storage.sync.set({darkMode: darkMode})
+    if (darkMode) {
+        setTheme("dark")
+    } else {
+        setTheme("light")
+    }
+}
+
 const runPreload = () => {
+    // Sync settings from cloud
+    chrome.storage.sync.get(null, (result) => {
+        const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
+        darkModeToggle.checked = result.darkMode
+        toggleDarkMode();
+    });
+
+    // Sync notes from local storage
     chrome.storage.local.get(null, (result) => {
         if (!result.activeNote) { newNote(); }
         // Load active note
@@ -259,6 +281,11 @@ const runPreload = () => {
 
 window.onload = runPreload;
 
+// DARKMODE EVENT LISTENER
+const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
+darkModeToggle.addEventListener("change", toggleDarkMode)
+
+// DELETE NOTE EVENT LISTENER
 const deleteNoteButton = <HTMLButtonElement>document.getElementById("deleteNoteButton")
 deleteNoteButton.addEventListener("click", deleteActiveNote)
 
