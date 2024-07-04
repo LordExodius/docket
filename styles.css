@@ -2,6 +2,17 @@ body {
     height: calc(100vh - 20px);
     margin: 0;
     padding: 10px;
+    border-color: #e3e6e9;
+}
+
+textarea {
+    -moz-tab-size : 4;
+    -o-tab-size : 4;
+    tab-size : 4;
+}
+
+a {
+    cursor: pointer;
 }
 
 body.popup {
@@ -153,10 +164,18 @@ input[type="checkbox"] {
     background-color: #e3e6e9;
 }
 
+.verticalLine[data-theme="dark"] {
+    background-color: #585858;
+}
+
 .horizontalLine {
     height: 1px;
     width: 100%;
     background-color: #e3e6e9;
+}
+
+.horizontalLine[data-theme="dark"] {
+    background-color: #585858;
 }
 
 .dropdown {
@@ -170,7 +189,8 @@ input[type="checkbox"] {
 
 [data-theme="dark"] {
     background-color: #1e1e1e;
-    color: #f6f8fa;
+    color: #cccccc;
+    scrollbar-color: #636363 #1e1e1e;
 }
 
 code[data-theme="dark"] {
