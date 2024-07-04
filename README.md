@@ -2,10 +2,12 @@
 locally saved markdown notes in a new tab or popup 📝
 
 ### Screenshots
-<div align="center">
-<img src="https://github.com/LordExodius/docket/assets/26910397/24da96b2-ddc7-49a8-a0b0-3b1ad9588bfd" width="800px"><br>
-  <em>this is docket running in a new tab!</em>
-</div>
+
+Dark Mode!|Code block themes :D
+:-:|:-:
+![dark mode](https://github.com/LordExodius/docket/assets/26910397/99bb6a71-9bff-48c2-9f01-cc3e1d92ab04)|![code sample](https://github.com/LordExodius/docket/assets/26910397/df5081a0-25a7-4244-9644-99af3a740256)
+
+
 
 ### Installation
 1. Clone or download this repo and unzip (if you downloaded a zip file).
