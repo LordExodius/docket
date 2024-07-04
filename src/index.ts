@@ -138,8 +138,8 @@ const deleteNoteByUUID = (uuid: string) => {
 }
 
 const savedNoteHandler = (uuid: string) => {
-    const userNote = getNoteByUUID(uuid);
-    setActiveNote(userNote!);
+    const userNote = <UserNote>getNoteByUUID(uuid);
+    setActiveNote(userNote);
 }
 
 const renderSavedNotes = () => {
