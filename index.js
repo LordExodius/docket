@@ -44,7 +44,7 @@ const getEditorText = () => {
     return document.getElementById("mdEditor").value || "";
 };
 const getNoteTitle = () => {
-    return document.getElementById("fileName").innerHTML || "new note";
+    return document.getElementById("fileName").innerHTML || "unnamed";
 };
 /**
  * @returns UserNote object containing title and body of currently active note
@@ -271,7 +271,7 @@ const updateCodeStyle = () => {
     }
     codeStyle = document.getElementById("codeStyleDropdown").value;
     chrome.storage.local.set({ codeStyle: codeStyle });
-    console.log(`Setting code style to: ${codeStyle}`);
+    // console.log(`Setting code style to: ${codeStyle}`)
     const codeStylesheetElement = document.createElement("link");
     codeStylesheetElement.rel = "stylesheet";
     codeStylesheetElement.href = `code_themes/${codeStyle}.css`;

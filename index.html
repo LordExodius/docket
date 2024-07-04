@@ -10,15 +10,17 @@
 <body data-theme="light">
     <div id="docketBody">
         <div id="navBar" data-theme="light">
-            <header>Docket > 
-                <h3 id="fileName" contenteditable="true"></h3> 
-            </header>
-            <div id="noteOptions">
-                <button id="newNoteButton">📝</button>
-                <button id="deleteNoteButton">🗑️</button>
+            <div>
+                <header>Docket > 
+                    <h3 id="fileName" contenteditable="true"></h3> 
+                </header>
+                <div id="noteOptions">
+                    <button id="newNoteButton">📝</button>
+                    <button id="deleteNoteButton">🗑️</button>
+                </div>
             </div>
             <div id="savedNotes"></div>
-            <footer id="navFooter">
+            <div id="navFooter">
                 <label>Code Style:
                     <select id="codeStyleDropdown">
                         <option value="github">github</option>
@@ -30,7 +32,7 @@
                     <input id="darkModeToggle" type="checkbox">
                     <span class="slider">Dark Mode</span>
                 </label>
-            </footer>
+            </div>
         </div>
 
         <textarea title="Input" id="mdEditor" class="bodyText" spellcheck="false" data-theme="light"></textarea>
