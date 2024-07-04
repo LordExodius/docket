@@ -20,6 +20,8 @@ hljs.registerLanguage('python', python);
 hljs.registerLanguage('plaintext', plaintext);
 hljs.registerLanguage('rust', rust);
 hljs.registerLanguage('typescript', typescript);
+let darkMode = false;
+let uiTheme = "light";
 // Marked object
 const marked = new Marked({
     gfm: true
@@ -65,16 +67,20 @@ const renderMarkdown = () => {
     document.getElementById("mdRender").innerHTML = DOMPurify.sanitize(marked.parse(editorText));
     // Reformat inline code blocks (PLACEHOLDER UNTIL RENDERER TAGS IMPLEMENTED)
     const codeBlocks = Array.from(document.getElementsByTagName("code"));
-    codeBlocks.map((code) => {
+    codeBlocks.forEach((code) => {
         const parent = code.parentElement;
+        code.setAttribute("data-theme", uiTheme);
         if (parent.tagName != "PRE") {
             code.style.padding = ".2em .4em";
             code.style.borderRadius = "5px";
         }
+        else {
+            parent.setAttribute("data-theme", uiTheme);
+        }
     });
 };
 const getNoteByUUID = (uuid) => {
-    console.log("scanning notes");
+    // console.log("scanning notes")
     for (let i = 0; i < savedNotes.length; i++) {
         if (savedNotes[i].uuid == uuid) {
             return savedNotes[i];
@@ -82,7 +88,7 @@ const getNoteByUUID = (uuid) => {
     }
 };
 const setNoteByUUID = (uuid, note) => {
-    console.log(`setting note with uuid ${uuid}`);
+    // console.log(`setting note with uuid ${uuid}`)
     for (let i = 0; i < savedNotes.length; i++) {
         if (savedNotes[i].uuid == uuid) {
             savedNotes[i] = note;
@@ -94,7 +100,7 @@ const setNoteByUUID = (uuid, note) => {
 const deleteNoteByUUID = (uuid) => {
     const remaining = savedNotes.filter((note) => {
         if (note.uuid == uuid) {
-            console.log("remove this one");
+            // console.log("remove this one")
             return false;
         }
         return true;
@@ -140,7 +146,7 @@ const saveActiveNote = () => {
 // Debounce rendering to rerender after no input detected for {timeout}ms
 const debounce = (lastExecuted) => {
     if (Date.now() - lastExecuted.msSinceLastInput > timeout) {
-        console.log("Debounce");
+        // console.log("Debounce")
         renderMarkdown();
         saveActiveNote();
         upsertActiveNote();
@@ -227,7 +233,38 @@ const setActiveNote = (userNote) => {
 const deleteActiveNote = () => {
     deleteNoteByUUID(currentUUID);
 };
+const setTheme = (theme) => {
+    const themedElements = document.querySelectorAll("[data-theme]");
+    themedElements.forEach((element) => {
+        element.setAttribute("data-theme", theme);
+    });
+};
+const toggleDarkMode = () => {
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    darkMode = darkModeToggle.checked;
+    chrome.storage.sync.set({ darkMode: darkMode });
+    if (darkMode) {
+        uiTheme = "dark";
+        setTheme(uiTheme);
+    }
+    else {
+        uiTheme = "light";
+        setTheme(uiTheme);
+    }
+};
 const runPreload = () => {
+    // Sync settings from cloud
+    chrome.storage.sync.get(null, (result) => {
+        const darkModeToggle = document.getElementById("darkModeToggle");
+        darkModeToggle.checked = result.darkMode;
+        toggleDarkMode();
+    });
+    const codeStylesheet = localStorage.getItem("codeStylesheet") || "github";
+    const codeStylesheetElement = document.createElement("link");
+    codeStylesheetElement.rel = "stylesheet";
+    codeStylesheetElement.href = `code_themes/${codeStylesheet}.css`;
+    document.head.appendChild(codeStylesheetElement);
+    // Sync notes from local storage
     chrome.storage.local.get(null, (result) => {
         if (!result.activeNote) {
             newNote();
@@ -240,6 +277,10 @@ const runPreload = () => {
     });
 };
 window.onload = runPreload;
+// DARKMODE EVENT LISTENER
+const darkModeToggle = document.getElementById("darkModeToggle");
+darkModeToggle.addEventListener("change", toggleDarkMode);
+// DELETE NOTE EVENT LISTENER
 const deleteNoteButton = document.getElementById("deleteNoteButton");
 deleteNoteButton.addEventListener("click", deleteActiveNote);
 // NEWNOTE EVENT LISTENER
