@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>docket</title>
+</head>
+<body class="popup" data-theme="light">
+    <div id="docketBody" class="popup">
+        <div id="navBar" class="popup" data-theme="light">
+            <header class="popup">
+                Docket > <h3 id="fileName" class="popup" contenteditable="true"></h3>
+            </header>
+            <div id="noteOptions">
+                <button id="newNoteButton" class="popup">📝</button>
+                <button id="deleteNoteButton" class="popup">🗑️</button>
+            </div>
+        </div>
+        <div>
+            <details class="dropdown" id="noteDropdown">
+                <summary>Notes</summary>
+                <div id="savedNotes"></div>
+            </details>
+            <label>Code Style:
+                <select id="codeStyleDropdown">
+                    <option value="github">github</option>
+                    <option value="github-dark">github-dark</option>
+                    <option value="github-dark-dimmed">github-dark-dimmed</option>
+                </select>
+            </label>
+            <label class="switch">
+                <input id="darkModeToggle" type="checkbox">
+                <span class="slider">Dark Mode</span>
+            </label>
+        </div>
+        <div id="mdRender" class="bodyText popup"></div>
+        <div class="horizontalLine"></div>
+        <textarea title="Input" id="mdEditor" class="bodyText popup" spellcheck="false" data-theme="light"></textarea>
+    </div>
+    <script src="../dist/bundle.js"></script>
+</body>
+</html>
