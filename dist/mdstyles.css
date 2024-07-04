@@ -11,15 +11,19 @@
 }
 
 /* <pre> tags used for code blocks only */
-pre:has(> code){
+pre:has(> code) {
     padding: 10px;
     background-color: #f6f8fa;
     font-size: 14px;
 }
 
 [data-theme="dark"] pre:has(> code) {
-    background-color: #22272e;
+    background-color: #2e2e2e;
     color: #d4d4d4;
+}
+
+.hljs[data-theme="dark"] {
+    color: #cccccc;
 }
 
 strong {
