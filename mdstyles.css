@@ -17,6 +17,11 @@ pre:has(> code){
     font-size: 14px;
 }
 
+[data-theme="dark"] pre:has(> code) {
+    background-color: #22272e;
+    color: #d4d4d4;
+}
+
 strong {
     font-weight: 500;
 }
@@ -25,6 +30,11 @@ code {
     font-family: ui-monospace,"Cascadia Mono","Segoe UI Mono","Ubuntu Mono","Roboto Mono",Menlo, Monaco, Consolas,monospace; 
     background-color: #f6f8fa;
     font-size: 85%;
+}
+
+code[data-theme="dark"] {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
 }
 
 h1, h2, h3,
