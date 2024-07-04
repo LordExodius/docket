@@ -22,6 +22,7 @@ hljs.registerLanguage('rust', rust);
 hljs.registerLanguage('typescript', typescript);
 let darkMode = false;
 let uiTheme = "light";
+let codeStyle = "github";
 // Marked object
 const marked = new Marked({
     gfm: true
@@ -252,6 +253,37 @@ const toggleDarkMode = () => {
         setTheme(uiTheme);
     }
 };
+const testCodeBackground = () => {
+    const hljsTemp = document.createElement("code");
+    hljsTemp.classList.add("hljs");
+    document.body.appendChild(hljsTemp);
+    const background = window.getComputedStyle(hljsTemp).getPropertyValue("background-color");
+    document.body.removeChild(hljsTemp);
+    return background;
+};
+const setCodeStyle = () => {
+    var _a;
+    // clear old stylesheet if exists
+    const oldStyleSheet = document.getElementById("codeStylesheet");
+    if (oldStyleSheet) {
+        (_a = oldStyleSheet.parentNode) === null || _a === void 0 ? void 0 : _a.removeChild(oldStyleSheet);
+    }
+    codeStyle = document.getElementById("codeStyleDropdown").value;
+    chrome.storage.local.set({ codeStyle: codeStyle });
+    console.log(`Setting code style to: ${codeStyle}`);
+    const codeStylesheetElement = document.createElement("link");
+    codeStylesheetElement.rel = "stylesheet";
+    codeStylesheetElement.href = `code_themes/${codeStyle}.css`;
+    codeStylesheetElement.id = "codeStylesheet";
+    document.head.appendChild(codeStylesheetElement);
+    // Set background color for code blocks
+    if (codeStyle === "github") {
+        document.querySelector(":root").style.setProperty("--default-code-background", "#f6f8fa");
+    }
+    else {
+        setTimeout(() => { document.querySelector(":root").style.setProperty("--default-code-background", testCodeBackground()); }, 20);
+    }
+};
 const runPreload = () => {
     // Sync settings from cloud
     chrome.storage.sync.get(null, (result) => {
@@ -259,24 +291,24 @@ const runPreload = () => {
         darkModeToggle.checked = result.darkMode;
         toggleDarkMode();
     });
-    const codeStylesheet = localStorage.getItem("codeStylesheet") || "github";
-    const codeStylesheetElement = document.createElement("link");
-    codeStylesheetElement.rel = "stylesheet";
-    codeStylesheetElement.href = `code_themes/${codeStylesheet}.css`;
-    document.head.appendChild(codeStylesheetElement);
     // Sync notes from local storage
     chrome.storage.local.get(null, (result) => {
         if (!result.activeNote) {
             newNote();
         }
-        // Load active note
-        setActiveNote(result.activeNote);
-        // Load saved notes
-        savedNotes = result.savedNotes || [];
+        setActiveNote(result.activeNote); // Load active note
+        savedNotes = result.savedNotes || []; // Load saved notes
         upsertSavedNotes();
+        codeStyle = result.codeStyle || "github";
+        const codeStyleDropdown = document.getElementById("codeStyleDropdown");
+        codeStyleDropdown.value = codeStyle;
+        setCodeStyle();
     });
 };
 window.onload = runPreload;
+// CODESTYLE EVENT LISTENER
+const codeStyleDropdown = document.getElementById("codeStyleDropdown");
+codeStyleDropdown.addEventListener("change", setCodeStyle);
 // DARKMODE EVENT LISTENER
 const darkModeToggle = document.getElementById("darkModeToggle");
 darkModeToggle.addEventListener("change", toggleDarkMode);

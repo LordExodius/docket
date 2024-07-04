@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="github.css">
+    <link rel="stylesheet" href="styles.css">   
     <title>docket</title>
 </head>
 <body data-theme="light">
@@ -19,6 +18,13 @@
             </div>
             <div id="savedNotes"></div>
             <footer id="navFooter">
+                <label>Code Style:
+                    <select id="codeStyleDropdown">
+                        <option value="github">github</option>
+                        <option value="github-dark">github-dark</option>
+                        <option value="github-dark-dimmed">github-dark-dimmed</option>
+                    </select>
+                </label><br>
                 <label class="switch">
                     <input id="darkModeToggle" type="checkbox">
                     <span class="slider">Dark Mode</span>
