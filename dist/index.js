@@ -235,6 +235,11 @@ const runPreload = () => {
         darkModeToggle.checked = result.darkMode;
         toggleDarkMode();
     });
+    const codeStylesheet = localStorage.getItem("codeStylesheet") || "github";
+    const codeStylesheetElement = document.createElement("link");
+    codeStylesheetElement.rel = "stylesheet";
+    codeStylesheetElement.href = `code_themes/${codeStylesheet}.css`;
+    document.head.appendChild(codeStylesheetElement);
     // Sync notes from local storage
     chrome.storage.local.get(null, (result) => {
         if (!result.activeNote) {
