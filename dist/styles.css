@@ -1,7 +1,7 @@
 :root {
     --default-border-color: #e3e6e9;
     --default-secondary-border-color: #b0b5b9;
-    --default-secondary-color: #f6f8fa;
+    --default-code-background: #f6f8fa;
     --dark-border-color: #585858;
     --dark-background-color: #1e1e1e;
     --dark-secondary-color: #2e2e2e;
@@ -214,17 +214,13 @@ input[type="checkbox"] {
     scrollbar-color: #636363 var(--dark-background-color);
 }
 
-code[data-theme="dark"] {
-    background-color: var(--dark-secondary-color);
-}
-
 #navBar[data-theme="dark"] {
     background-color: var(--dark-secondary-color);
-    color: var(--default-secondary-color);
+    color: var(--default-secondary-background);
 }
 
 #navBar[data-theme="light"] {
-    background-color: var(--default-secondary-color);
+    background-color: var(--default-secondary-background);
 }
 
 /* FROM MDSTYLES.CSS */
@@ -272,17 +268,13 @@ table, th, td {
 /* <pre> tags used for code blocks only */
 pre:has(> code) {
     padding: 10px;
-    background-color: var(--default-secondary-background);
+    background-color: var(--default-code-background);
     font-size: 15px;
 }
 
-pre:has(> code)[data-theme="dark"] {
-    background-color : var(--dark-secondary-color);
-}
-
-.hljs[data-theme="dark"] {
+/* .hljs[data-theme="dark"] {
     color: var(--dark-font-color);
-}
+} */
 
 strong {
     font-weight: 500;
@@ -290,7 +282,7 @@ strong {
 
 code {
     font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace; 
-    background-color: var(--default-secondary-background);
+    background-color: var(--default-code-background);
     font-size: 85%;
 }
 
