@@ -44,7 +44,7 @@ const getEditorText = () => {
     return document.getElementById("mdEditor").value || "";
 };
 const getNoteTitle = () => {
-    return document.getElementById("fileName").innerHTML;
+    return document.getElementById("fileName").innerHTML || "new note";
 };
 /**
  * @returns UserNote object containing title and body of currently active note
@@ -208,12 +208,12 @@ const getNoteNames = () => {
 const newNote = () => {
     getNoteNames().then((notes) => {
         let newNoteName = "new note";
-        console.log('note names:', notes, notes.includes(newNoteName));
+        // console.log('note names:', notes, notes.includes(newNoteName));
         let i = 0;
         while (notes.includes(newNoteName)) {
             i++;
             newNoteName = `new note (${i})`;
-            console.log('new note name:', newNoteName, notes.includes(newNoteName));
+            // console.log('new note name:', newNoteName, notes.includes(newNoteName));
         }
         setActiveNote({
             uuid: self.crypto.randomUUID(),
