@@ -7,7 +7,7 @@
     --dark-secondary-color: #2e2e2e;
     --dark-font-color: #cccccc;
     --default-markdown-border: #dee3e8;
-    --default-secondary-background: #f6f8fa;
+    --default-secondary-color: #f6f8fa;
     --default-link-color: #489ae3;
     --weight-semibold: 600;
 }
@@ -216,11 +216,11 @@ input[type="checkbox"] {
 
 #navBar[data-theme="dark"] {
     background-color: var(--dark-secondary-color);
-    color: var(--default-secondary-background);
+    color: var(--default-secondary-color);
 }
 
 #navBar[data-theme="light"] {
-    background-color: var(--default-secondary-background);
+    background-color: var(--default-secondary-color);
 }
 
 /* FROM MDSTYLES.CSS */
@@ -286,6 +286,16 @@ code {
     font-size: 85%;
 }
 
+.inline-code {
+    background-color: var(--default-secondary-color);
+    color: black;
+}
+
+.inline-code[data-theme="dark"] {
+    background-color: var(--dark-secondary-color);
+    color: var(--dark-font-color);
+}
+
 h1, h2, h3,
 h4, h5, h6,
 p, blockquote, pre {
@@ -304,11 +314,11 @@ h1, h2 {
 blockquote {
     padding: 0 16px;
     border-left: 4px solid var(--default-markdown-border);
-    background-color: var(--default-secondary-background);
+    background-color: var(--default-secondary-color);
 }
 
 blockquote[data-theme="dark"] {
-    background-color: var(--default-secondary-background);
+    background-color: var(--default-secondary-color);
 }
 
 a:link {
