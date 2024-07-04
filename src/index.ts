@@ -1,4 +1,4 @@
-import { Marked, options } from 'marked'
+import { Marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { markedHighlight } from 'marked-highlight'
 import markedFootnote from 'marked-footnote'
