@@ -96,7 +96,7 @@ const renderMarkdown = () => {
 }
 
 const getNoteByUUID = (uuid: string) => {
-    console.log("scanning notes")
+    // console.log("scanning notes")
     for (let i = 0; i < savedNotes.length; i++) {
         if (savedNotes[i].uuid == uuid) {
             return savedNotes[i]
@@ -105,7 +105,7 @@ const getNoteByUUID = (uuid: string) => {
 }
 
 const setNoteByUUID = (uuid: string, note: UserNote) => {
-    console.log(`setting note with uuid ${uuid}`)
+    // console.log(`setting note with uuid ${uuid}`)
     for (let i = 0; i < savedNotes.length; i++) {
         if (savedNotes[i].uuid == uuid) {
             savedNotes[i] = note;
@@ -118,7 +118,7 @@ const setNoteByUUID = (uuid: string, note: UserNote) => {
 const deleteNoteByUUID = (uuid: string) => {
     const remaining = savedNotes.filter((note: UserNote) => {
         if (note.uuid == uuid) {
-            console.log("remove this one")
+            // console.log("remove this one")
             return false
         } return true
     })
@@ -171,7 +171,7 @@ interface LastExecuted {
 // Debounce rendering to rerender after no input detected for {timeout}ms
 const debounce = (lastExecuted: LastExecuted) => {
     if (Date.now() - lastExecuted.msSinceLastInput > timeout) {
-        console.log("Debounce")
+        // console.log("Debounce")
         renderMarkdown()
         saveActiveNote()
         upsertActiveNote()
