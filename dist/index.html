@@ -4,25 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="mdstyles.css">
     <link rel="stylesheet" href="github.css">
     <title>docket</title>
 </head>
-<body>
+<body data-theme="light">
     <div id="docketBody">
-        <div id="navBar">
+        <div id="navBar" data-theme="light">
             <header>Docket > 
-                <h3 id="fileName" contenteditable="true"></h3>
+                <h3 id="fileName" contenteditable="true"></h3> 
             </header>
             <div id="noteOptions">
                 <button id="newNoteButton">📝</button>
                 <button id="deleteNoteButton">🗑️</button>
             </div>
             <div id="savedNotes"></div>
+            <footer id="navFooter">
+                <label class="switch">
+                    <input id="darkModeToggle" type="checkbox">
+                    <span class="slider">Dark Mode</span>
+                </label>
+            </footer>
         </div>
-        <textarea title="Input" id="mdEditor" class="bodyText" spellcheck="false"></textarea>
-        <div class="verticalLine"></div>
-        <div id="mdRender" class="bodyText"></div>
+
+        <textarea title="Input" id="mdEditor" class="bodyText" spellcheck="false" data-theme="light"></textarea>
+        <div class="verticalLine" data-theme="light"></div>
+        <div id="mdRender" class="bodyText" data-theme="light"></div>
     </div>
     <script src="bundle.js"></script>
 </body>

@@ -45,7 +45,6 @@ Here's a few things that I have in mind:
 - **Settings**
   - Change the font size
   - Change the font family
-  - Add a dark mode
   - Change parser options (like enabling/disabling GFM)
 - **Optimizations/QoL**
   - Lazy render markdown (only rerender when the markdown changes)

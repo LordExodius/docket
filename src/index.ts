@@ -1,4 +1,4 @@
-import { Marked, options } from 'marked'
+import { Marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { markedHighlight } from 'marked-highlight'
 import markedFootnote from 'marked-footnote'
@@ -21,6 +21,9 @@ hljs.registerLanguage('python', python)
 hljs.registerLanguage('plaintext', plaintext)
 hljs.registerLanguage('rust', rust)
 hljs.registerLanguage('typescript', typescript)
+
+let darkMode = false;
+let uiTheme = "light"
 
 // Marked object
 const marked = new Marked(
@@ -84,17 +87,21 @@ const renderMarkdown = () => {
     
     // Reformat inline code blocks (PLACEHOLDER UNTIL RENDERER TAGS IMPLEMENTED)
     const codeBlocks = Array.from(document.getElementsByTagName("code"))
-    codeBlocks.map((code: HTMLElement) => {
-        const parent = code.parentElement
-        if ((<HTMLElement>parent).tagName != "PRE") {
+    codeBlocks.forEach((code: HTMLElement) => {
+        const parent = <HTMLElement>code.parentElement
+        code.setAttribute("data-theme", uiTheme)
+        if (parent.tagName != "PRE") {
             code.style.padding = ".2em .4em"
             code.style.borderRadius = "5px"
+        } else {
+            parent.setAttribute("data-theme", uiTheme)
         }
+        
     })
 }
 
 const getNoteByUUID = (uuid: string) => {
-    console.log("scanning notes")
+    // console.log("scanning notes")
     for (let i = 0; i < savedNotes.length; i++) {
         if (savedNotes[i].uuid == uuid) {
             return savedNotes[i]
@@ -103,7 +110,7 @@ const getNoteByUUID = (uuid: string) => {
 }
 
 const setNoteByUUID = (uuid: string, note: UserNote) => {
-    console.log(`setting note with uuid ${uuid}`)
+    // console.log(`setting note with uuid ${uuid}`)
     for (let i = 0; i < savedNotes.length; i++) {
         if (savedNotes[i].uuid == uuid) {
             savedNotes[i] = note;
@@ -116,7 +123,7 @@ const setNoteByUUID = (uuid: string, note: UserNote) => {
 const deleteNoteByUUID = (uuid: string) => {
     const remaining = savedNotes.filter((note: UserNote) => {
         if (note.uuid == uuid) {
-            console.log("remove this one")
+            // console.log("remove this one")
             return false
         } return true
     })
@@ -131,8 +138,8 @@ const deleteNoteByUUID = (uuid: string) => {
 }
 
 const savedNoteHandler = (uuid: string) => {
-    const userNote = getNoteByUUID(uuid);
-    setActiveNote(userNote!);
+    const userNote = <UserNote>getNoteByUUID(uuid);
+    setActiveNote(userNote);
 }
 
 const renderSavedNotes = () => {
@@ -169,7 +176,7 @@ interface LastExecuted {
 // Debounce rendering to rerender after no input detected for {timeout}ms
 const debounce = (lastExecuted: LastExecuted) => {
     if (Date.now() - lastExecuted.msSinceLastInput > timeout) {
-        console.log("Debounce")
+        // console.log("Debounce")
         renderMarkdown()
         saveActiveNote()
         upsertActiveNote()
@@ -263,7 +270,41 @@ const deleteActiveNote = () => {
     deleteNoteByUUID(currentUUID)
 }
 
+const setTheme = (theme: string) => {
+    const themedElements = document.querySelectorAll("[data-theme]")
+    themedElements.forEach((element) => {
+        element.setAttribute("data-theme", theme)
+    })
+}
+
+const toggleDarkMode = () => {
+    const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
+    darkMode = darkModeToggle.checked
+    chrome.storage.sync.set({darkMode: darkMode})
+    if (darkMode) {
+        uiTheme = "dark";
+        setTheme(uiTheme)
+    } else {
+        uiTheme = "light";
+        setTheme(uiTheme)
+    }
+}
+
 const runPreload = () => {
+    // Sync settings from cloud
+    chrome.storage.sync.get(null, (result) => {
+        const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
+        darkModeToggle.checked = result.darkMode
+        toggleDarkMode();
+    });
+
+    const codeStylesheet = localStorage.getItem("codeStylesheet") || "github";
+    const codeStylesheetElement = document.createElement("link");
+    codeStylesheetElement.rel = "stylesheet";
+    codeStylesheetElement.href = `code_themes/${codeStylesheet}.css`;
+    document.head.appendChild(codeStylesheetElement)
+
+    // Sync notes from local storage
     chrome.storage.local.get(null, (result) => {
         if (!result.activeNote) { newNote(); }
         // Load active note
@@ -276,6 +317,11 @@ const runPreload = () => {
 
 window.onload = runPreload;
 
+// DARKMODE EVENT LISTENER
+const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
+darkModeToggle.addEventListener("change", toggleDarkMode)
+
+// DELETE NOTE EVENT LISTENER
 const deleteNoteButton = <HTMLButtonElement>document.getElementById("deleteNoteButton")
 deleteNoteButton.addEventListener("click", deleteActiveNote)
 
