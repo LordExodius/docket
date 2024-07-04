@@ -112,6 +112,7 @@ input[type="checkbox"] {
 }
 
 #mdEditor.popup {
+    font-size: 12px;
     width: calc(100% - 20px);
     overflow: scroll;
     overflow-x: hidden;
@@ -214,6 +215,10 @@ input[type="checkbox"] {
     scrollbar-color: #636363 var(--dark-background-color);
 }
 
+#noteDropdown {
+    flex-grow: 1;
+}
+
 #navBar[data-theme="dark"] {
     background-color: var(--dark-secondary-color);
     color: var(--default-secondary-color);
@@ -263,6 +268,10 @@ th, td {
 
 table, th, td {
     border: 1px solid var(--default-markdown-border);
+}
+
+pre {
+    white-space: pre-wrap;
 }
 
 /* <pre> tags used for code blocks only */
