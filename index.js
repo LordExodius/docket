@@ -74,6 +74,7 @@ const renderMarkdown = () => {
         if (parent.tagName != "PRE") {
             code.style.padding = ".2em .4em";
             code.style.borderRadius = "5px";
+            code.classList.add("inline-code");
         }
         else {
             parent.setAttribute("data-theme", uiTheme);
