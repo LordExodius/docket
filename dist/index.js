@@ -75,7 +75,7 @@ const renderMarkdown = () => {
     });
 };
 const getNoteByUUID = (uuid) => {
-    console.log("scanning notes");
+    // console.log("scanning notes")
     for (let i = 0; i < savedNotes.length; i++) {
         if (savedNotes[i].uuid == uuid) {
             return savedNotes[i];
@@ -83,7 +83,7 @@ const getNoteByUUID = (uuid) => {
     }
 };
 const setNoteByUUID = (uuid, note) => {
-    console.log(`setting note with uuid ${uuid}`);
+    // console.log(`setting note with uuid ${uuid}`)
     for (let i = 0; i < savedNotes.length; i++) {
         if (savedNotes[i].uuid == uuid) {
             savedNotes[i] = note;
@@ -95,7 +95,7 @@ const setNoteByUUID = (uuid, note) => {
 const deleteNoteByUUID = (uuid) => {
     const remaining = savedNotes.filter((note) => {
         if (note.uuid == uuid) {
-            console.log("remove this one");
+            // console.log("remove this one")
             return false;
         }
         return true;
@@ -141,7 +141,7 @@ const saveActiveNote = () => {
 // Debounce rendering to rerender after no input detected for {timeout}ms
 const debounce = (lastExecuted) => {
     if (Date.now() - lastExecuted.msSinceLastInput > timeout) {
-        console.log("Debounce");
+        // console.log("Debounce")
         renderMarkdown();
         saveActiveNote();
         upsertActiveNote();
@@ -228,6 +228,11 @@ const runPreload = () => {
         darkModeToggle.checked = result.darkMode;
         toggleDarkMode();
     });
+    const codeStylesheet = localStorage.getItem("codeStylesheet") || "github";
+    const codeStylesheetElement = document.createElement("link");
+    codeStylesheetElement.rel = "stylesheet";
+    codeStylesheetElement.href = `code_themes/${codeStylesheet}.css`;
+    document.head.appendChild(codeStylesheetElement);
     // Sync notes from local storage
     chrome.storage.local.get(null, (result) => {
         if (!result.activeNote) {
