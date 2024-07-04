@@ -23,6 +23,7 @@ hljs.registerLanguage('rust', rust)
 hljs.registerLanguage('typescript', typescript)
 
 let darkMode = false;
+let uiTheme = "light"
 
 // Marked object
 const marked = new Marked(
@@ -86,12 +87,16 @@ const renderMarkdown = () => {
     
     // Reformat inline code blocks (PLACEHOLDER UNTIL RENDERER TAGS IMPLEMENTED)
     const codeBlocks = Array.from(document.getElementsByTagName("code"))
-    codeBlocks.map((code: HTMLElement) => {
-        const parent = code.parentElement
-        if ((<HTMLElement>parent).tagName != "PRE") {
+    codeBlocks.forEach((code: HTMLElement) => {
+        const parent = <HTMLElement>code.parentElement
+        code.setAttribute("data-theme", uiTheme)
+        if (parent.tagName != "PRE") {
             code.style.padding = ".2em .4em"
             code.style.borderRadius = "5px"
+        } else {
+            parent.setAttribute("data-theme", uiTheme)
         }
+        
     })
 }
 
@@ -254,9 +259,11 @@ const toggleDarkMode = () => {
     darkMode = darkModeToggle.checked
     chrome.storage.sync.set({darkMode: darkMode})
     if (darkMode) {
-        setTheme("dark")
+        uiTheme = "dark";
+        setTheme(uiTheme)
     } else {
-        setTheme("light")
+        uiTheme = "light";
+        setTheme(uiTheme)
     }
 }
 
