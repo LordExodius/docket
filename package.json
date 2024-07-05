@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx tsc --build && npx rollup -c"
+    "build": "npx rollup -c"
   },
   "keywords": [],
   "author": "",
@@ -14,8 +14,10 @@
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/chrome": "^0.0.268",
     "rollup": "^4.18.0",
+    "tslib": "^2.6.3",
     "typescript": "^5.5.2"
   },
   "dependencies": {
