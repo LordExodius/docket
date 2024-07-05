@@ -3,7 +3,7 @@ locally saved markdown notes in a new tab or popup 📝
 
 ### Screenshots
 
-Dark Mode!|Code block themes :D|Popup notes 🍿
+🌆 Dark Mode!|🧑‍💻 Code block themes|🆙 Popup notes
 :-:|:-:|:-:
 ![dark mode](https://github.com/LordExodius/docket/assets/26910397/02ab6e49-bba1-4865-b5ed-4724126205cc)|![code sample](https://github.com/LordExodius/docket/assets/26910397/fabc4746-8442-4178-885b-7993fd77f76b)|![popup](https://github.com/LordExodius/docket/assets/26910397/49eb5f93-116d-444f-a9b5-66401d8cf708)
 
