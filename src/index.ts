@@ -277,20 +277,17 @@ const setTheme = (theme: string) => {
     themedElements.forEach((element) => {
         element.setAttribute("data-theme", theme)
     })
-}
-
-const setThemeIcon = (darkMode: boolean) =>{ 
     const themeIcon = <HTMLImageElement>document.getElementById("themeIcon")
-    themeIcon.src = darkMode ? "../icons/darkmode.svg" : "../icons/lightmode.svg"
-    themeIcon.className = darkMode ? "dark-icon" : "light-icon"
+    // icon is inverted from theme because it represents the theme that will be switched to
+    themeIcon.src = theme === 'dark' ? "../icons/lightmode.svg" : "../icons/darkmode.svg"
+    themeIcon.className = theme === 'dark' ? "light-icon" : "dark-icon"
 }
 
 const toggleDarkMode = () => {
     const themeIcon = <HTMLImageElement>document.getElementById("themeIcon");
-    darkMode = themeIcon.className === 'dark-icon';
+    darkMode = themeIcon.className === 'dark-icon'; // icky global variable
     chrome.storage.sync.set({darkMode: darkMode})
     setTheme(darkMode ? "dark" : "light")
-    setThemeIcon(!darkMode)
 }
 
 const testCodeBackground = (): string => {
@@ -330,8 +327,7 @@ const updateCodeStyle = () => {
 const runPreload = () => {
     // Sync settings from cloud
     chrome.storage.sync.get('darkMode', (result) => {
-        setThemeIcon(result.darkMode);
-        toggleDarkMode();
+        setTheme(result.darkMode ? "dark" : "light");
     });
 
     // Sync notes from local storage
