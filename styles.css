@@ -69,6 +69,11 @@ input[type="checkbox"] {
     bottom: 20px;
 }
 
+#codeStyleDropdown[data-theme="dark"] {
+    color: var(--dark-font-color);
+    background-color: var(--dark-secondary-color);
+}
+
 #docketBody {
     display: flex;
     flex-wrap: wrap;
@@ -134,7 +139,7 @@ input[type="checkbox"] {
     line-height: 1.5;
     overflow-y: auto;
     margin-bottom: 1rem;
-    min-height: calc(100% - 160px);
+    min-height: calc(100% - 170px);
     scrollbar-width: thin;
 }
 
@@ -347,4 +352,11 @@ a:visited {
 }
 a:hover {
     text-decoration: underline;
+}
+
+#themeIcon {
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    margin-top: 5px;
 }
