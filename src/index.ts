@@ -279,17 +279,18 @@ const setTheme = (theme: string) => {
     })
 }
 
+const setThemeIcon = (darkMode: boolean) =>{ 
+    const themeIcon = <HTMLImageElement>document.getElementById("themeIcon")
+    themeIcon.src = darkMode ? "../icons/darkmode.svg" : "../icons/lightmode.svg"
+    themeIcon.className = darkMode ? "dark-icon" : "light-icon"
+}
+
 const toggleDarkMode = () => {
-    const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
-    darkMode = darkModeToggle.checked
+    const themeIcon = <HTMLImageElement>document.getElementById("themeIcon");
+    darkMode = themeIcon.className === 'dark-icon';
     chrome.storage.sync.set({darkMode: darkMode})
-    if (darkMode) {
-        uiTheme = "dark";
-        setTheme(uiTheme)
-    } else {
-        uiTheme = "light";
-        setTheme(uiTheme)
-    }
+    setTheme(darkMode ? "dark" : "light")
+    setThemeIcon(!darkMode)
 }
 
 const testCodeBackground = (): string => {
@@ -328,9 +329,8 @@ const updateCodeStyle = () => {
 
 const runPreload = () => {
     // Sync settings from cloud
-    chrome.storage.sync.get(null, (result) => {
-        const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
-        darkModeToggle.checked = result.darkMode
+    chrome.storage.sync.get('darkMode', (result) => {
+        setThemeIcon(result.darkMode);
         toggleDarkMode();
     });
 
@@ -355,8 +355,8 @@ const codeStyleDropdown = <HTMLSelectElement>document.getElementById("codeStyleD
 codeStyleDropdown.addEventListener("change", updateCodeStyle)
 
 // DARKMODE EVENT LISTENER
-const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
-darkModeToggle.addEventListener("change", toggleDarkMode)
+const darkModeToggle = <HTMLImageElement>document.getElementById("themeIcon")
+darkModeToggle.addEventListener("click", toggleDarkMode)
 
 // DELETE NOTE EVENT LISTENER
 const deleteNoteButton = <HTMLButtonElement>document.getElementById("deleteNoteButton")

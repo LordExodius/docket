@@ -241,18 +241,17 @@ const setTheme = (theme) => {
         element.setAttribute("data-theme", theme);
     });
 };
+const setThemeIcon = (darkMode) => {
+    const themeIcon = document.getElementById("themeIcon");
+    themeIcon.src = darkMode ? "../icons/darkmode.svg" : "../icons/lightmode.svg";
+    themeIcon.className = darkMode ? "dark-icon" : "light-icon";
+};
 const toggleDarkMode = () => {
-    const darkModeToggle = document.getElementById("darkModeToggle");
-    darkMode = darkModeToggle.checked;
+    const themeIcon = document.getElementById("themeIcon");
+    darkMode = themeIcon.className === 'dark-icon';
     chrome.storage.sync.set({ darkMode: darkMode });
-    if (darkMode) {
-        uiTheme = "dark";
-        setTheme(uiTheme);
-    }
-    else {
-        uiTheme = "light";
-        setTheme(uiTheme);
-    }
+    setTheme(darkMode ? "dark" : "light");
+    setThemeIcon(!darkMode);
 };
 const testCodeBackground = () => {
     const hljsTemp = document.createElement("code");
@@ -287,9 +286,8 @@ const updateCodeStyle = () => {
 };
 const runPreload = () => {
     // Sync settings from cloud
-    chrome.storage.sync.get(null, (result) => {
-        const darkModeToggle = document.getElementById("darkModeToggle");
-        darkModeToggle.checked = result.darkMode;
+    chrome.storage.sync.get('darkMode', (result) => {
+        setThemeIcon(result.darkMode);
         toggleDarkMode();
     });
     // Sync notes from local storage
@@ -311,8 +309,8 @@ window.onload = runPreload;
 const codeStyleDropdown = document.getElementById("codeStyleDropdown");
 codeStyleDropdown.addEventListener("change", updateCodeStyle);
 // DARKMODE EVENT LISTENER
-const darkModeToggle = document.getElementById("darkModeToggle");
-darkModeToggle.addEventListener("change", toggleDarkMode);
+const darkModeToggle = document.getElementById("themeIcon");
+darkModeToggle.addEventListener("click", toggleDarkMode);
 // DELETE NOTE EVENT LISTENER
 const deleteNoteButton = document.getElementById("deleteNoteButton");
 deleteNoteButton.addEventListener("click", deleteActiveNote);
