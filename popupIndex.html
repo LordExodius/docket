@@ -13,26 +13,28 @@
                 Docket > <h3 id="fileName" class="popup" contenteditable="true"></h3>
             </header>
             <div id="noteOptions">
-                <button id="newNoteButton" class="popup">📝</button>
-                <button id="deleteNoteButton" class="popup">🗑️</button>
+                <button id="newNoteButton" class="popup" data-theme="light">📝</button>
+                <button id="deleteNoteButton" class="popup" data-theme="light">🗑️</button>
             </div>
         </div>
         <div>
+            <div class="optionMenu">
+                <label class="optionSetting">Code Style:
+                    <select id="codeStyleDropdown" data-theme="light">
+                        <option value="github">github</option>
+                        <option value="github-dark">github-dark</option>
+                        <option value="github-dark-dimmed">github-dark-dimmed</option>
+                    </select>
+                </label>
+                <label class="switch optionSetting rightAlign">
+                    <input id="darkModeToggle" type="checkbox">
+                    <span class="slider">Dark Mode</span>
+                </label>
+            </div>
             <details class="dropdown" id="noteDropdown">
                 <summary>Notes</summary>
                 <div id="savedNotes"></div>
             </details>
-            <label>Code Style:
-                <select id="codeStyleDropdown">
-                    <option value="github">github</option>
-                    <option value="github-dark">github-dark</option>
-                    <option value="github-dark-dimmed">github-dark-dimmed</option>
-                </select>
-            </label>
-            <label class="switch">
-                <input id="darkModeToggle" type="checkbox">
-                <span class="slider">Dark Mode</span>
-            </label>
         </div>
         <div id="mdRender" class="bodyText popup"></div>
         <div class="horizontalLine"></div>

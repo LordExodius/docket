@@ -15,8 +15,8 @@
                     <h3 id="fileName" contenteditable="true"></h3> 
                 </header>
                 <div id="noteOptions">
-                    <button id="newNoteButton">📝</button>
-                    <button id="deleteNoteButton">🗑️</button>
+                    <button id="newNoteButton" data-theme="light">📝</button>
+                    <button id="deleteNoteButton" data-theme="light">🗑️</button>
                 </div>
             </div>
             <div id="savedNotes"></div>
@@ -29,7 +29,10 @@
                     </select>
                 </label><br>
                 <div>
-                    <img src="../icons/lightmode.svg" id="themeIcon" class="light-icon">
+                    <label class="switch">
+                        <input id="darkModeToggle" type="checkbox">
+                        <span class="slider">Dark Mode</span>
+                    </label>
                 </div>
             </div>
         </div>
