@@ -240,19 +240,16 @@ const setTheme = (theme) => {
     themedElements.forEach((element) => {
         element.setAttribute("data-theme", theme);
     });
+    const themeIcon = document.getElementById("themeIcon");
+    // icon is inverted from theme because it represents the theme that will be switched to
+    themeIcon.src = theme === 'dark' ? "../icons/lightmode.svg" : "../icons/darkmode.svg";
+    themeIcon.className = theme === 'dark' ? "light-icon" : "dark-icon";
 };
 const toggleDarkMode = () => {
-    const darkModeToggle = document.getElementById("darkModeToggle");
-    darkMode = darkModeToggle.checked;
+    const themeIcon = document.getElementById("themeIcon");
+    darkMode = themeIcon.className === 'dark-icon'; // icky global variable
     chrome.storage.sync.set({ darkMode: darkMode });
-    if (darkMode) {
-        uiTheme = "dark";
-        setTheme(uiTheme);
-    }
-    else {
-        uiTheme = "light";
-        setTheme(uiTheme);
-    }
+    setTheme(darkMode ? "dark" : "light");
 };
 const testCodeBackground = () => {
     const hljsTemp = document.createElement("code");
@@ -287,10 +284,8 @@ const updateCodeStyle = () => {
 };
 const runPreload = () => {
     // Sync settings from cloud
-    chrome.storage.sync.get(null, (result) => {
-        const darkModeToggle = document.getElementById("darkModeToggle");
-        darkModeToggle.checked = result.darkMode;
-        toggleDarkMode();
+    chrome.storage.sync.get('darkMode', (result) => {
+        setTheme(result.darkMode ? "dark" : "light");
     });
     // Sync notes from local storage
     chrome.storage.local.get(null, (result) => {
@@ -311,8 +306,8 @@ window.onload = runPreload;
 const codeStyleDropdown = document.getElementById("codeStyleDropdown");
 codeStyleDropdown.addEventListener("change", updateCodeStyle);
 // DARKMODE EVENT LISTENER
-const darkModeToggle = document.getElementById("darkModeToggle");
-darkModeToggle.addEventListener("change", toggleDarkMode);
+const darkModeToggle = document.getElementById("themeIcon");
+darkModeToggle.addEventListener("click", toggleDarkMode);
 // DELETE NOTE EVENT LISTENER
 const deleteNoteButton = document.getElementById("deleteNoteButton");
 deleteNoteButton.addEventListener("click", deleteActiveNote);
