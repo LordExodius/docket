@@ -7,15 +7,25 @@
     --default-secondary-color: #f6f8fa;
     --default-link-color: #489ae3;
     --default-font-color: black;
-    --dark-border-color: #585858;
-    --dark-background-color: #1e1e1e;
-    --dark-secondary-color: #2e2e2e;
-
     --weight-semibold: 600;
+}
+
+[data-theme="dark"] {
+    --default-background-color: #1e1e1e;
+    --default-border-color: #585858;
+    --default-font-color: #cccccc;
+    --default-markdown-border: #585858;
+    --default-secondary-color: #2e2e2e;
 }
 
 p, div {
     background-color: inherit;
+}
+
+img {
+    object-fit: cover;
+    max-width: 100%;
+    height: auto;
 }
 
 body {
@@ -25,14 +35,6 @@ body {
     border-color: var(--default-border-color);
     color: var(--default-font-color);
     background-color: var(--default-background-color);
-}
-
-[data-theme="dark"] {
-    --default-background-color: #1e1e1e;
-    --default-border-color: #585858;
-    --default-font-color: #cccccc;
-    --default-markdown-border: #585858;
-    --default-secondary-color: #2e2e2e;
 }
 
 textarea {
@@ -107,6 +109,7 @@ input[type="checkbox"] {
     width: 100%;
     height: 100%;
     overflow-x: hidden;
+    overflow-y: hidden;
 }
 
 #docketBody.popup {
@@ -280,7 +283,8 @@ input:checked + .slider:before {
     width: 0;
     flex-grow: 2;
     height: calc(100% - 20px);
-    padding: 10px
+    padding: 10px;
+    scrollbar-color: var(--default-border-color) var(--default-background-color);
 }
 
 .savedNoteLink {
@@ -341,6 +345,7 @@ hr {
 }
 
 table {
+    width: auto;
     border-collapse: collapse;
 }
 
