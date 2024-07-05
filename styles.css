@@ -38,7 +38,7 @@ a {
 }
 
 body.popup {
-    height: 550px;
+    
 }
 
 button {
@@ -54,6 +54,14 @@ button[data-theme="dark"]:hover {
     background-color: var(--dark-secondary-color);
     color: black;
   }
+
+select {
+    margin: 0 0 10px;
+}
+
+select.popup {
+    margin: 0;
+}
 
 header.popup {
     flex-grow: 1;
@@ -112,7 +120,7 @@ input[type="checkbox"] {
 
 #navBar.popup {
     width: calc(100% - 20px);
-    height: 50px;
+    height: 20px;
     flex-direction: row;
 }
 
@@ -134,6 +142,7 @@ input[type="checkbox"] {
     width: calc(100% - 20px);
     overflow: scroll;
     overflow-x: hidden;
+    border-bottom: 1px solid var(--default-border-color);
 }
 
 #mdRender {
@@ -192,6 +201,60 @@ input[type="checkbox"] {
     height: 100%;
 }
 
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 24px;
+    height: 14px;
+    margin: 0 5px
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 10px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 10px;
+    width: 10px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 10px;
+}
+
+input:checked + .slider {
+    background-color: var(--dark-border-color);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--dark-secondary-color);
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(10px);
+    -ms-transform: translateX(10px);
+    transform: translateX(10px);
+}  
+
 .optionSetting {
     flex-grow: 1;
 }
@@ -241,14 +304,20 @@ input[type="checkbox"] {
     border-bottom: 1px solid var(--default-border-color);
 }
 
-.popup {
+#popup {
     width: 400px;
+    height: 575px;
     overflow-y: hidden;
 }
 
 [data-theme="dark"] {
     color: var(--dark-font-color);
     scrollbar-color: #636363 var(--dark-background-color);
+}
+
+#darkModeSelect {
+    display: flex;
+    align-items: center;
 }
 
 #noteDropdown {

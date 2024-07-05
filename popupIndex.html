@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="styles.css">
     <title>docket</title>
 </head>
-<body class="popup" data-theme="light">
+<body id="popup" data-theme="light">
     <div id="docketBody" class="popup">
         <div id="navBar" class="popup" data-theme="light">
             <header class="popup">
@@ -18,19 +18,6 @@
             </div>
         </div>
         <div>
-            <div class="optionMenu">
-                <label class="optionSetting">Code Style:
-                    <select id="codeStyleDropdown" data-theme="light">
-                        <option value="github">github</option>
-                        <option value="github-dark">github-dark</option>
-                        <option value="github-dark-dimmed">github-dark-dimmed</option>
-                    </select>
-                </label>
-                <label class="switch optionSetting rightAlign">
-                    <input id="darkModeToggle" type="checkbox">
-                    <span class="slider">Dark Mode</span>
-                </label>
-            </div>
             <details class="dropdown" id="noteDropdown">
                 <summary>Notes</summary>
                 <div id="savedNotes"></div>
@@ -39,6 +26,21 @@
         <div id="mdRender" class="bodyText popup"></div>
         <div class="horizontalLine"></div>
         <textarea title="Input" id="mdEditor" class="bodyText popup" spellcheck="false" data-theme="light"></textarea>
+        <div class="optionMenu">
+            <label class="optionSetting">Code Style:
+                <select id="codeStyleDropdown" data-theme="light" class="popup">
+                    <option value="github">github</option>
+                    <option value="github-dark">github-dark</option>
+                    <option value="github-dark-dimmed">github-dark-dimmed</option>
+                </select>
+            </label>
+            <div id="darkModeSelect">
+                Dark Mode
+                <label class="switch optionSetting rightAlign">
+                    <input id="darkModeToggle" type="checkbox">
+                    <span class="slider"></span>
+                </label></div>
+        </div>
     </div>
     <script src="../dist/bundle.js"></script>
 </body>
