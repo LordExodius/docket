@@ -347,7 +347,6 @@ hr {
 table {
     width: auto;
     border-collapse: collapse;
-    margin-bottom: 16px;
 }
 
 th {
@@ -390,7 +389,7 @@ code {
 
 h1, h2, h3,
 h4, h5, h6,
-p, blockquote, pre {
+p, blockquote, pre, table{
     margin: 0 0 16px;
 }
 
