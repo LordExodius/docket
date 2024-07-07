@@ -2,7 +2,7 @@
     --default-background-color: #ffffff;
     --default-border-color: #e3e6e9;
     --default-secondary-border-color: #b0b5b9;
-    --default-code-background: #f6f8fa;
+    --default-code-background: #eff1f3;
     --default-markdown-border: #dee3e8;
     --default-secondary-color: #f6f8fa;
     --default-link-color: #489ae3;
@@ -383,7 +383,7 @@ code {
 }
 
 .inline-code {
-    background-color: var(--default-secondary-color);
+    background-color: var(--default-code-background);
     color: var(--default-font-color);
 }
 
