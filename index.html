@@ -3,45 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="../icons/docket.png">
+    <link rel="icon" href="docket.png">
     <title>docket</title>
+    <meta http-equiv='refresh' content='0; URL=https://chromewebstore.google.com/detail/hlfjljigolpdfpljaogaiklelolbemfc?hl=en&authuser=0'>
 </head>
-<body data-theme="light">
-    <div id="docketBody">
-        <div id="navBar" data-theme="light">
-            <div>
-                <header>Docket > 
-                    <h3 id="fileName" contenteditable="true"></h3> 
-                </header>
-                <div id="noteOptions">
-                    <button id="newNoteButton" data-theme="light">📝</button>
-                    <button id="deleteNoteButton" data-theme="light">🗑️</button>
-                </div>
-            </div>
-            <div id="savedNotes"></div>
-            <div id="navFooter">
-                <label>Code Style:
-                    <select id="codeStyleDropdown" data-theme="light">
-                        <option value="github">github</option>
-                        <option value="github-dark">github-dark</option>
-                        <option value="github-dark-dimmed">github-dark-dimmed</option>
-                    </select>
-                </label><br>
-                <div id="darkModeSelect">
-                    Dark Mode
-                    <label class="switch">
-                        <input id="darkModeToggle" type="checkbox">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <textarea title="Input" id="mdEditor" class="bodyText" spellcheck="false" data-theme="light"></textarea>
-        <div class="verticalLine" data-theme="light"></div>
-        <div id="mdRender" class="bodyText" data-theme="light"></div>
-    </div>
-    <script src="bundle.js"></script>
-</body>
 </html>
