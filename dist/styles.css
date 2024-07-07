@@ -347,6 +347,7 @@ hr {
 table {
     width: auto;
     border-collapse: collapse;
+    margin-bottom: 16px;
 }
 
 th {
