@@ -59,6 +59,9 @@ const getEditorText = () => {
     return (<HTMLInputElement>document.getElementById("mdEditor")).value || ""
 }
 
+/** 
+ * Summary: Get note title from HTML element
+ **/
 const getNoteTitle = () => {
     return (<HTMLElement>document.getElementById("fileName")).innerHTML || "unnamed"
 }
@@ -102,6 +105,10 @@ const renderMarkdown = () => {
     })
 }
 
+/** 
+ * Summary: Get note from `savedNotes` by UUID
+ * @param uuid UUID of note to get
+ **/
 const getNoteByUUID = (uuid: string) => {
     // console.log("scanning notes")
     for (let i = 0; i < savedNotes.length; i++) {
@@ -111,6 +118,11 @@ const getNoteByUUID = (uuid: string) => {
     }
 }
 
+/** 
+ * Summary: Update note content in `savedNotes` by UUID
+ * @param uuid UUID of note to set
+ * @param note UserNote object to set
+ **/
 const setNoteByUUID = (uuid: string, note: UserNote) => {
     // console.log(`setting note with uuid ${uuid}`)
     for (let i = 0; i < savedNotes.length; i++) {
@@ -122,6 +134,7 @@ const setNoteByUUID = (uuid: string, note: UserNote) => {
     savedNotes.push(note);
 }
 
+//* Summary: Delete note from savedNotes by UUID */
 const deleteNoteByUUID = (uuid: string) => {
     const remaining = savedNotes.filter((note: UserNote) => {
         if (note.uuid == uuid) {
@@ -139,6 +152,10 @@ const deleteNoteByUUID = (uuid: string) => {
     }
 }
 
+/**
+ * Summary: Load active note from `savedNotes` by UUID
+ * @param uuid UUID of note to load
+ */
 const savedNoteHandler = (uuid: string) => {
     const userNote = <UserNote>getNoteByUUID(uuid);
     setActiveNote(userNote);
@@ -175,7 +192,7 @@ interface LastExecuted {
     msSinceLastUpdate: number
 }
 
-// Debounce rendering to rerender after no input detected for {timeout}ms
+/** Debounce rendering to for final input detected. */
 const debounce = (lastExecuted: LastExecuted) => {
     if (Date.now() - lastExecuted.msSinceLastInput > timeout) {
         // console.log("Debounce")
@@ -188,11 +205,11 @@ const debounce = (lastExecuted: LastExecuted) => {
 
 /**
  * Input handler for updates to the markdown editor/title
- * @param lastExecuted 
+ * @param lastExecuted LastExecuted object containing timestamps of last input and last update
  */
 const handleInput = (lastExecuted: LastExecuted) => {
     let currTime = Date.now()
-    // debounce
+    // debounce final input
     lastExecuted.msSinceLastInput = currTime
     setTimeout(debounce, timeout, lastExecuted)
 
@@ -207,7 +224,9 @@ const handleInput = (lastExecuted: LastExecuted) => {
 }
 
 /**
- * Upsert savedNotes variable to local storage
+ * Upsert `savedNotes` to local storage. 
+ * 
+ * Note: this is a full overwrite of local storage `savedNotes`
  */
 const upsertSavedNotes = () => {
     chrome.storage.local.set({savedNotes: savedNotes}, () => {
@@ -216,7 +235,7 @@ const upsertSavedNotes = () => {
 }
 
 /**
- * Upsert currently active note to savedNotes and localStorage
+ * Upsert currently active note to `savedNotes` and `localStorage`
  */
 const upsertActiveNote = () => {
     setNoteByUUID(currentUUID, getActiveNote())
@@ -259,6 +278,10 @@ const newNote = () => {
 
 // AUTOLOADING
 
+/**
+ * Set active note to a `UserNote` object.
+ * @param userNote UserNote object to set as active note
+ */
 const setActiveNote = (userNote: UserNote) => {
     currentUUID = userNote.uuid;
     (<HTMLElement>document.getElementById("fileName")).innerHTML = userNote.noteTitle;
@@ -268,12 +291,19 @@ const setActiveNote = (userNote: UserNote) => {
     renderMarkdown();
 }
 
+/**
+ * Calls `deleteNoteByUUID` on `currentUUID` if user confirms deletion.
+ */
 const deleteActiveNote = () => {
     if(confirm("Are you sure you want to delete this note?")) {
         deleteNoteByUUID(currentUUID)
     }
 }
 
+/**
+ * Set theme for all elements with `data-theme` attribute.
+ * @param theme name of theme to set
+ */
 const setTheme = (theme: string) => {
     const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
     darkModeToggle.checked = darkMode
@@ -283,6 +313,9 @@ const setTheme = (theme: string) => {
     })
 }
 
+/**
+ * Toggle dark mode on or off depending on the state of the `darkModeToggle` checkbox.
+ */
 const toggleDarkMode = () => {
     const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
     darkMode = darkModeToggle.checked
@@ -300,7 +333,14 @@ const testCodeBackground = (): string => {
     return background
 }
 
+/**
+ * This function matches the default code block background color to the current theme.
+ * 
+ * If you are having issues with this not working on older systems, try increasing `updateTimeout`.
+ */
 const updateCodeStyle = () => {
+    const updateTimeout = 50;
+
     // clear old stylesheet if exists
     const oldStyleSheet = document.getElementById("codeStylesheet")
     if (oldStyleSheet) {
@@ -320,11 +360,14 @@ const updateCodeStyle = () => {
     if (codeStyle === "github") {
         (<HTMLElement>document.querySelector(":root")).style.setProperty("--default-code-background", "#f6f8fa");
     } else {
-        setTimeout(() => {(<HTMLElement>document.querySelector(":root")).style.setProperty("--default-code-background", testCodeBackground());}, 50)
+        setTimeout(() => {(<HTMLElement>document.querySelector(":root")).style.setProperty("--default-code-background", testCodeBackground());}, updateTimeout)
     }
     
 }
 
+/**
+ * Summary: Run all initialization functions
+ */
 const runPreload = () => {
     // Sync settings from cloud
     chrome.storage.sync.get(null, (result) => {
