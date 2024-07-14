@@ -412,6 +412,21 @@ newNoteButton.addEventListener("click", newNote)
 const mdEditor = <HTMLInputElement>document.getElementById("mdEditor")
 const mdTitle = <HTMLElement>document.getElementById("fileName")
 
+/**
+ * Event listener to resync notes when tab is hidden and made visible
+ */
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+        console.log("Resyncing notes")
+        runPreload();
+    }
+})
+
+/** 
+ * Resync notes when window is focused
+ */ 
+window.onfocus = runPreload;
+
 mdEditor.addEventListener("input", 
     handleInput.bind(undefined, {
         msSinceLastInput: Date.now(),
