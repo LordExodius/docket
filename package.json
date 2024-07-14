@@ -23,6 +23,7 @@
     "dompurify": "^3.1.5",
     "highlight.js": "^11.9.0",
     "marked": "^13.0.1",
+    "marked-alert": "^2.0.1",
     "marked-footnote": "^1.2.2",
     "marked-highlight": "^2.1.3"
   }
