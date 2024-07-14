@@ -269,7 +269,9 @@ const setActiveNote = (userNote: UserNote) => {
 }
 
 const deleteActiveNote = () => {
-    deleteNoteByUUID(currentUUID)
+    if(confirm("Are you sure you want to delete this note?")) {
+        deleteNoteByUUID(currentUUID)
+    }
 }
 
 const setTheme = (theme: string) => {
