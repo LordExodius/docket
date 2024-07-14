@@ -8,6 +8,10 @@ locally saved markdown notes in a new tab or popup 📝
 ![dark mode](https://github.com/LordExodius/docket/assets/26910397/02ab6e49-bba1-4865-b5ed-4724126205cc)|![code sample](https://github.com/LordExodius/docket/assets/26910397/fabc4746-8442-4178-885b-7993fd77f76b)|![popup](https://github.com/LordExodius/docket/assets/26910397/49eb5f93-116d-444f-a9b5-66401d8cf708)
 
 ### Installation
+
+> [!WARNING]
+> Uninstalling and reinstalling the extension will erase all saved notes - please back them up before attempting to switch between the chrome store and dev extensions!
+
 Available on the chrome web store [here](http://awwscar.ca/docket/). 
 
 **Note:** The chrome web store version will likely be a few versions behind. If you're looking to keep up to date with the latest version of docket, I recommend cloning this repo and simply using it as an extension in dev mode :D
