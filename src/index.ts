@@ -445,7 +445,6 @@ const mdTitle = <HTMLElement>document.getElementById("fileName")
  */
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-        console.log("Resyncing notes")
         runPreload();
     }
 })
