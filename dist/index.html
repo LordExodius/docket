@@ -18,8 +18,8 @@
                     <button id="newNoteButton" data-theme="light">📝</button>
                     <button id="deleteNoteButton" data-theme="light">🗑️</button>
                 </div>
+                <div id="savedNotes"></div>
             </div>
-            <div id="savedNotes"></div>
             <div id="navFooter">
                 <label>Code Style:
                     <select id="codeStyleDropdown" data-theme="light">
@@ -28,10 +28,17 @@
                         <option value="github-dark-dimmed">github-dark-dimmed</option>
                     </select>
                 </label><br>
-                <div id="darkModeSelect">
-                    Dark Mode
+                <div id="darkModeSetting" class="settingToggle">
+                    <span>Dark Mode</span>
                     <label class="switch">
-                        <input id="darkModeToggle" type="checkbox">
+                        <input id="darkModeSlider" type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div id="mdRenderSetting" class="settingToggle">
+                    <span>MD Preview</span> 
+                    <label class="switch">
+                        <input id="mdRenderSlider" type="checkbox" checked>
                         <span class="slider"></span>
                     </label>
                 </div>

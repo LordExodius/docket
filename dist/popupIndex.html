@@ -34,12 +34,20 @@
                     <option value="github-dark-dimmed">github-dark-dimmed</option>
                 </select>
             </label>
-            <div id="darkModeSelect">
-                Dark Mode
+            <div id="darkModeSetting" class="settingToggle">
+                <span>Dark Mode</span>
                 <label class="switch optionSetting rightAlign">
-                    <input id="darkModeToggle" type="checkbox">
+                    <input id="darkModeSlider" type="checkbox">
                     <span class="slider"></span>
-                </label></div>
+                </label>
+            </div>
+            <div id="mdRenderSetting" class="settingToggle">
+                <span>MD Preview</span> 
+                <label class="switch">
+                    <input id="mdRenderSlider" type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
     </div>
     <script src="../dist/bundle.js"></script>

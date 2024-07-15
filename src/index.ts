@@ -84,6 +84,10 @@ const getActiveNote = (): UserNote => {
  * Summary: Rerender markdown
  */
 const renderMarkdown = () => {
+    // Prevent rendering when editor is minimized
+    const mdRender = <HTMLElement>document.getElementById("mdRender")
+    if (mdRender.style.display === "none") { return }
+    
     const editorText = getEditorText();
 
     // Parse markdown and sanitize HTML output
@@ -305,8 +309,8 @@ const deleteActiveNote = () => {
  * @param theme name of theme to set
  */
 const setTheme = (theme: string) => {
-    const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
-    darkModeToggle.checked = darkMode
+    const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
+    darkModeSlider.checked = darkMode
     const themedElements = document.querySelectorAll("[data-theme]")
     themedElements.forEach((element) => {
         element.setAttribute("data-theme", theme)
@@ -314,11 +318,11 @@ const setTheme = (theme: string) => {
 }
 
 /**
- * Toggle dark mode on or off depending on the state of the `darkModeToggle` checkbox.
+ * Toggle dark mode on or off depending on the state of the `darkModeSlider` checkbox.
  */
 const toggleDarkMode = () => {
-    const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
-    darkMode = darkModeToggle.checked
+    const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
+    darkMode = darkModeSlider.checked
     chrome.storage.sync.set({darkMode: darkMode})
     uiTheme = darkMode ? "dark" : "light"
     setTheme(uiTheme)
@@ -349,7 +353,6 @@ const updateCodeStyle = () => {
     
     codeStyle = (<HTMLSelectElement>document.getElementById("codeStyleDropdown")).value
     chrome.storage.local.set({codeStyle: codeStyle})
-    // console.log(`Setting code style to: ${codeStyle}`)
     const codeStylesheetElement = document.createElement("link");
     codeStylesheetElement.rel = "stylesheet";
     codeStylesheetElement.href = `code_themes/${codeStyle}.css`;
@@ -357,12 +360,32 @@ const updateCodeStyle = () => {
     document.head.appendChild(codeStylesheetElement)
     
     // Set background color for code blocks
-    if (codeStyle === "github") {
-        (<HTMLElement>document.querySelector(":root")).style.setProperty("--default-code-background", "#f6f8fa");
+    if (codeStyle === "github") { // Default code background for github theme, since the theme doesn't have a background color
+        (<HTMLElement>document.querySelector(":root")).style.setProperty("--default-code-background", "#eff1f3");
     } else {
         setTimeout(() => {(<HTMLElement>document.querySelector(":root")).style.setProperty("--default-code-background", testCodeBackground());}, updateTimeout)
     }
-    
+}
+
+/**
+ * Set display of markdown renderer
+ * @param display CSS display property
+ */
+const setMdRenderDisplay = (display: string) => {
+    (<HTMLElement>document.getElementById("mdRender")).style.display = display
+}
+
+/**
+ * Toggle markdown renderer display based on editor width or value of `mdRenderToggle` checkbox.
+ */
+const toggleMdRender = () => {
+    const editorWidth = (<HTMLElement>document.getElementById("mdEditor")).offsetWidth
+    const mdRenderSlider = <HTMLInputElement>document.getElementById("mdRenderSlider")
+    if (editorWidth < 300 || !mdRenderSlider.checked) {
+        setMdRenderDisplay("none")
+    } else {
+        setMdRenderDisplay("block")
+    }
 }
 
 /**
@@ -371,8 +394,8 @@ const updateCodeStyle = () => {
 const runPreload = () => {
     // Sync settings from cloud
     chrome.storage.sync.get(null, (result) => {
-        const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
-        darkModeToggle.checked = result.darkMode
+        const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
+        darkModeSlider.checked = result.darkMode
         toggleDarkMode()
     });
 
@@ -390,15 +413,20 @@ const runPreload = () => {
     })
 }
 
-window.onload = runPreload;
+window.addEventListener("load", runPreload)
+
+window.addEventListener("resize", toggleMdRender)
 
 // CODESTYLE EVENT LISTENER
 const codeStyleDropdown = <HTMLSelectElement>document.getElementById("codeStyleDropdown")
 codeStyleDropdown.addEventListener("change", updateCodeStyle)
 
 // DARKMODE EVENT LISTENER
-const darkModeToggle = <HTMLInputElement>document.getElementById("darkModeToggle")
-darkModeToggle.addEventListener("change", toggleDarkMode)
+const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
+darkModeSlider.addEventListener("change", toggleDarkMode)
+
+const mdRenderSlider = <HTMLInputElement>document.getElementById("mdRenderSlider")
+mdRenderSlider.addEventListener("change", toggleMdRender)
 
 // DELETE NOTE EVENT LISTENER
 const deleteNoteButton = <HTMLButtonElement>document.getElementById("deleteNoteButton")
@@ -413,7 +441,7 @@ const mdEditor = <HTMLInputElement>document.getElementById("mdEditor")
 const mdTitle = <HTMLElement>document.getElementById("fileName")
 
 /**
- * Event listener to resync notes when tab is hidden and made visible
+ * Resync notes when tab is hidden and made visible
  */
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
@@ -425,7 +453,7 @@ document.addEventListener("visibilitychange", () => {
 /** 
  * Resync notes when window is focused
  */ 
-window.onfocus = runPreload;
+window.addEventListener("focus", runPreload)
 
 mdEditor.addEventListener("input", 
     handleInput.bind(undefined, {

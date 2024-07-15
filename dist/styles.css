@@ -99,7 +99,7 @@ input[type="checkbox"] {
 
 #codeStyleDropdown {
     background-color: var(--default-secondary-color);
-    color: var(--default-font-color);
+    color: var(--default-code-color);
 }
 
 #docketBody {
@@ -123,7 +123,7 @@ input[type="checkbox"] {
     /* flex-grow: 0.5; */
     width: 150px;
     padding: 10px;
-    height: 95vh;
+    /* height: 95vh; */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -168,7 +168,6 @@ input[type="checkbox"] {
     line-height: 1.5;
     overflow-y: auto;
     margin-bottom: 1rem;
-    min-height: calc(100% - 170px);
     scrollbar-width: thin;
 }
 
@@ -313,9 +312,10 @@ input:checked + .slider:before {
     overflow-y: hidden;
 }
 
-#darkModeSelect {
+.settingToggle {
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 
 #noteDropdown {
@@ -385,6 +385,10 @@ code {
 .inline-code {
     background-color: var(--default-code-background);
     color: var(--default-font-color);
+}
+
+.inline-code[data-theme="dark"] {
+    background-color: var(--default-secondary-color);
 }
 
 h1, h2, h3,
