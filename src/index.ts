@@ -1,6 +1,7 @@
 import { Marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { markedHighlight } from 'marked-highlight'
+import markedKatex from "marked-katex-extension";
 import markedFootnote from 'marked-footnote'
 import hljs from 'highlight.js/lib/core'
 // Import supported code languages (for size purposes)
@@ -40,6 +41,12 @@ const marked = new Marked(
       }),
     markedFootnote()
 );
+
+const katexOptions = {
+    throwOnError: false
+};
+
+marked.use(markedKatex(katexOptions))
 
 const timeout = 0;
 interface UserNote {
