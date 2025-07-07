@@ -12,8 +12,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@rspack/cli": "^0.7.5",
-    "@rspack/core": "^0.7.5",
+    "@rspack/cli": "^1.4.4",
+    "@rspack/core": "^1.4.4",
     "@types/chrome": "^0.0.268",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.2"
