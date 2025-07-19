@@ -42,46 +42,96 @@ const marked = new Marked(
 );
 
 const timeout = 0;
+
+/**
+ * UserNote interface representing a note saved by the user.
+ * 
+ * @property uuid - Unique identifier for the note
+ * @property listOrder - Order in the savedNotes array
+ * @property noteTitle - Title of the note
+ * @property noteBody - Body of the note in markdown format
+ * @property lastUpdated - Timestamp of the last update in milliseconds since epoch
+ */
 interface UserNote {
     uuid: string,
+    listOrder: number,
     noteTitle: string,
     noteBody: string,
     lastUpdated: number
 }
 
-let savedNotes: UserNote[] = [];
+let noteList: UserNote[] = [];
 let currentUUID: string;
 
 /** 
- * Summary: Get editor text from HTML element
+ * Get editor text from HTML element
  **/ 
 const getEditorText = () => {
     return (<HTMLInputElement>document.getElementById("mdEditor")).value || ""
 }
 
 /** 
- * Summary: Get note title from HTML element
+ * Get note title from the HTML element
  **/
 const getNoteTitle = () => {
     return (<HTMLElement>document.getElementById("fileName")).innerHTML || "unnamed"
 }
 
 /**
- * @returns UserNote object containing title and body of currently active note
+ * Get the list order of a note by uuid from `savedNotes`
+ * @param uuid UUID of the note to get the list order for
+ * @returns List order of the current note
+ */
+const getNoteListOrder = (uuid: string): number => {
+    for (let i = 0; i < noteList.length; i++) {
+        if (noteList[i].uuid === uuid) {
+            return i
+        }
+    }
+    return noteList.length; // ERROR: Note not found in savedNotes
+}
+
+/**
+ * Get the active note from `savedNotes`
+ * @returns `UserNote` object containing title and body of currently active note
  */
 const getActiveNote = (): UserNote => {
     const noteTitle = getNoteTitle()
     const noteBody = getEditorText()
+    const uuid = currentUUID || self.crypto.randomUUID()
+    const listOrder = getNoteListOrder(uuid)
     return {
-        uuid: currentUUID || self.crypto.randomUUID(),
+        uuid: uuid,
+        listOrder: listOrder,
         noteTitle: noteTitle,
         noteBody: noteBody,
         lastUpdated: Date.now()
     }
 }
 
+/** 
+ * Get note from `savedNotes` by UUID
+ * @param uuid UUID of note to get
+ **/
+const getNoteByUUID = (uuid: string) => {
+    // console.log("scanning notes")
+    for (let i = 0; i < noteList.length; i++) {
+        if (noteList[i].uuid == uuid) {
+            return noteList[i]
+        }
+    }
+}
+
+const forceUpdateNoteListOrder = () => {
+    // console.log("force update note list order")
+    noteList.forEach((note: UserNote, index: number) => {
+        note.listOrder = index;
+        setNoteByUUID(note.uuid, note);
+    })
+}
+
 /**
- * Summary: Rerender markdown
+ * Render markdown from the editor to preview panel.
  */
 const renderMarkdown = () => {
     // Prevent rendering when editor is minimized
@@ -110,81 +160,122 @@ const renderMarkdown = () => {
 }
 
 /** 
- * Summary: Get note from `savedNotes` by UUID
- * @param uuid UUID of note to get
- **/
-const getNoteByUUID = (uuid: string) => {
-    // console.log("scanning notes")
-    for (let i = 0; i < savedNotes.length; i++) {
-        if (savedNotes[i].uuid == uuid) {
-            return savedNotes[i]
-        }
-    }
-}
-
-/** 
- * Summary: Update note content in `savedNotes` by UUID
+ * Update note content in `savedNotes` by UUID
  * @param uuid UUID of note to set
  * @param note UserNote object to set
  **/
 const setNoteByUUID = (uuid: string, note: UserNote) => {
     // console.log(`setting note with uuid ${uuid}`)
-    for (let i = 0; i < savedNotes.length; i++) {
-        if (savedNotes[i].uuid == uuid) {
-            savedNotes[i] = note;
+    for (let i = 0; i < noteList.length; i++) {
+        if (noteList[i].uuid == uuid) {
+            noteList[i] = note;
             return; 
         }
     }
-    savedNotes.push(note);
+    noteList.push(note);
 }
 
-//* Summary: Delete note from savedNotes by UUID */
+/** 
+ * Delete note from savedNotes by UUID
+ * @param uuid UUID of note to delete
+ **/
 const deleteNoteByUUID = (uuid: string) => {
-    const remaining = savedNotes.filter((note: UserNote) => {
+    const remaining = noteList.filter((note: UserNote) => {
         if (note.uuid == uuid) {
             // console.log("remove this one")
             return false
         } return true
     })
-    savedNotes = remaining;
-    upsertSavedNotes();
+    noteList = remaining;
+    upsertNoteList();
     // Automatically open the next available note, else create a new note
-    if(savedNotes.length > 0) {
-        setActiveNote(savedNotes[0]);
+    if(noteList.length > 0) {
+        setActiveNote(noteList[0]);
     } else {
         newNote();
     }
 }
 
 /**
- * Summary: Load active note from `savedNotes` by UUID
+ * Load active note from `noteList` by UUID to the editor.
  * @param uuid UUID of note to load
  */
-const savedNoteHandler = (uuid: string) => {
+const noteListHandler = (uuid: string) => {
     const userNote = <UserNote>getNoteByUUID(uuid);
     setActiveNote(userNote);
 }
 
-const renderSavedNotes = () => {
-    // Sort notes by last updated time
-    savedNotes.sort((a, b) => {
-        return b.lastUpdated - a.lastUpdated 
+// REORDER NOTES
+let currentlyDragging: HTMLLIElement | null = null;
+
+const initOrderNotes = () => {
+    noteList.sort((a, b) => {
+        return getNoteListOrder(a.uuid) - getNoteListOrder(b.uuid)
+    });
+}
+
+/**
+ * Update saved notes in the navbar.
+ *
+ * This function sorts the saved notes by their order and renders them as links in the navbar.
+ */
+const renderNoteList = () => {
+    // Log the note list for debugging
+    noteList.forEach((note: UserNote) => {
+        console.log(`Note: ${note.noteTitle}, UUID: ${note.uuid}, Order: ${note.listOrder}`);
     })
+
     // Load all saved notes to the navbar
-    const noteList = document.getElementById("savedNotes");
-    (<HTMLElement>noteList).innerHTML = "";
-    savedNotes.forEach((note: UserNote) => {
-        let noteLink: HTMLAnchorElement = document.createElement("a");
-        noteLink.innerHTML = note.noteTitle;
-        noteLink.className = "savedNoteLink";
-        noteLink.addEventListener("click", savedNoteHandler.bind(null, note.uuid));
-        (<HTMLElement>noteList).appendChild(noteLink);
-        (<HTMLElement>noteList).appendChild(document.createElement("br"));
+    const noteListElement = document.getElementById("noteList");
+    (<HTMLElement>noteListElement).innerHTML = "";
+    noteList.forEach((note: UserNote) => {
+        let noteElement: HTMLLIElement = document.createElement("li");
+        noteElement.className = "noteListItem";
+        noteElement.setAttribute("data-uuid", note.uuid);
+        noteElement.draggable = true;
+        noteElement.addEventListener("mouseover", (e) => {
+            (<HTMLLIElement>e.target).classList.add("hover");
+        });
+        noteElement.addEventListener("mouseout", (e) => {
+            (<HTMLLIElement>e.target).classList.remove("hover");
+        });
+        noteElement.addEventListener("dragstart", (e) => {
+            if (e.dataTransfer != undefined) {
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", note.uuid);
+                currentlyDragging = <HTMLLIElement>e.target;
+                noteElement.classList.add("dragging");
+            }
+        });
+        noteElement.addEventListener("dragend", () => {
+            if (currentlyDragging) {
+                currentlyDragging.classList.remove("dragging");
+                currentlyDragging = null;
+            }
+        });
+        noteElement.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            if (e.dataTransfer != undefined) {
+                e.dataTransfer.dropEffect = "move";
+                (<HTMLLIElement>e.target).classList.add("over");
+            }
+        });
+        noteElement.addEventListener("dragleave", (e) => {
+            (<HTMLLIElement>e.target).classList.remove("over");
+        });
+        noteElement.addEventListener("drop", (e) => {
+            e.preventDefault();
+            (<HTMLLIElement>e.target).classList.remove("over");
+        });
+
+        noteElement.innerHTML = note.noteTitle;
+        noteElement.addEventListener("click", noteListHandler.bind(null, note.uuid));
+        (<HTMLElement>noteListElement).appendChild(noteElement);
     })
 }
 
 /**
- * Summary: Autosave active note to chrome local storage
+ * Save active note to chrome local storage
  */
 const saveActiveNote = () => {
     const userNote = getActiveNote()
@@ -196,14 +287,14 @@ interface LastExecuted {
     msSinceLastUpdate: number
 }
 
-/** Debounce rendering to for final input detected. */
+/** Debounce rendering for final input detected. */
 const debounce = (lastExecuted: LastExecuted) => {
     if (Date.now() - lastExecuted.msSinceLastInput > timeout) {
         // console.log("Debounce")
         renderMarkdown()
         saveActiveNote()
         upsertActiveNote()
-        upsertSavedNotes()
+        upsertNoteList()
     }
 }
 
@@ -222,7 +313,7 @@ const handleInput = (lastExecuted: LastExecuted) => {
         renderMarkdown()
         saveActiveNote()
         upsertActiveNote()
-        upsertSavedNotes()
+        upsertNoteList()
         lastExecuted.msSinceLastUpdate = currTime
     }
 }
@@ -232,9 +323,9 @@ const handleInput = (lastExecuted: LastExecuted) => {
  * 
  * Note: this is a full overwrite of local storage `savedNotes`
  */
-const upsertSavedNotes = () => {
-    chrome.storage.local.set({savedNotes: savedNotes}, () => {
-        renderSavedNotes();
+const upsertNoteList = () => {
+    chrome.storage.local.set({savedNotes: noteList}, () => {
+        renderNoteList();
     })
 }
 
@@ -243,9 +334,13 @@ const upsertSavedNotes = () => {
  */
 const upsertActiveNote = () => {
     setNoteByUUID(currentUUID, getActiveNote())
-    upsertSavedNotes();
+    upsertNoteList();
 }
 
+/**
+ * Get all note names from `savedNotes`
+ * @returns Promise resolving to an array of note names
+ */
 const getNoteNames = (): Promise<string[]> => {
     return new Promise((resolve, reject) => {
       chrome.storage.local.get("savedNotes", (result) => {
@@ -260,7 +355,7 @@ const getNoteNames = (): Promise<string[]> => {
   };
 
 /**
- * Summary: Start a new note and upsert the previously active note
+ * Start a new note
  */
 const newNote = () => {
     getNoteNames().then((notes) => {
@@ -275,6 +370,7 @@ const newNote = () => {
         setActiveNote({
             uuid: self.crypto.randomUUID(), 
             noteTitle: newNoteName, 
+            listOrder: noteList.length,
             noteBody: "", 
             lastUpdated: Date.now()});
     });
@@ -389,7 +485,7 @@ const toggleMdRender = () => {
 }
 
 /**
- * Summary: Run all initialization functions
+ * Run all initialization functions
  */
 const runPreload = () => {
     // Sync settings from cloud
@@ -403,8 +499,10 @@ const runPreload = () => {
     chrome.storage.local.get(null, (result) => {
         if (!result.activeNote) { newNote(); }
         setActiveNote(result.activeNote); // Load active note
-        savedNotes = result.savedNotes || []; // Load saved notes
-        upsertSavedNotes();
+        noteList = result.savedNotes || []; // Load saved notes
+        // forceUpdateNoteListOrder(); // Force update note list order
+        initOrderNotes(); // Initialize note list order
+        upsertNoteList();
 
         codeStyle = result.codeStyle || "github"
         const codeStyleDropdown = <HTMLSelectElement>document.getElementById("codeStyleDropdown")
