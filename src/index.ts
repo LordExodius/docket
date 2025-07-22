@@ -122,6 +122,10 @@ const getNoteByUUID = (uuid: string) => {
     }
 }
 
+/**
+ * Force update the list order of all notes in `savedNotes` for backwards compatibility.
+ * This function sets the `listOrder` property of each note to its index in the `noteList` array.
+ */
 const forceUpdateNoteListOrder = () => {
     // console.log("force update note list order")
     noteList.forEach((note: UserNote, index: number) => {
@@ -214,6 +218,37 @@ const initOrderNotes = () => {
     });
 }
 
+const insertNoteBefore = (newElement: HTMLElement, referenceElement: HTMLElement) => {
+    const parent = referenceElement.parentNode;
+    if (parent) {
+        parent.insertBefore(newElement, referenceElement);
+        // Update the list order of the notes
+        const newElementUUID = newElement.getAttribute("data-uuid");
+        const referenceElementUUID = referenceElement.getAttribute("data-uuid");
+        if (newElementUUID && referenceElementUUID) {
+            const newNote = getNoteByUUID(newElementUUID);
+            const referenceNote = getNoteByUUID(referenceElementUUID);
+            if (newNote && referenceNote) {
+                newNote.listOrder = referenceNote.listOrder;
+                // Update the list order of the reference note and all subsequent notes
+                for (let i = newNote.listOrder + 1; i < noteList.length; i++) {
+                    const subsequentNote = noteList[i];
+                    subsequentNote.listOrder++;
+                    setNoteByUUID(subsequentNote.uuid, subsequentNote);
+                }
+                referenceNote.listOrder++;
+                setNoteByUUID(referenceNote.uuid, referenceNote);
+
+                // Finally, set the new note
+                setNoteByUUID(newNote.uuid, newNote);
+            }
+        }
+    } else {
+        console.error("Reference element has no parent node.");
+    }
+}
+
+
 /**
  * Update saved notes in the navbar.
  *
@@ -221,18 +256,21 @@ const initOrderNotes = () => {
  */
 const renderNoteList = () => {
     // Log the note list for debugging
-    noteList.forEach((note: UserNote) => {
-        console.log(`Note: ${note.noteTitle}, UUID: ${note.uuid}, Order: ${note.listOrder}`);
-    })
+    // noteList.forEach((note: UserNote) => {
+    //     console.log(`Note: ${note.noteTitle}, UUID: ${note.uuid}, Order: ${note.listOrder}`);
+    // })
 
     // Load all saved notes to the navbar
     const noteListElement = document.getElementById("noteList");
     (<HTMLElement>noteListElement).innerHTML = "";
     noteList.forEach((note: UserNote) => {
+        // Create a new list item for each note
         let noteElement: HTMLLIElement = document.createElement("li");
         noteElement.className = "noteListItem";
         noteElement.setAttribute("data-uuid", note.uuid);
         noteElement.draggable = true;
+
+        // Add event listeners for hover, drag, and click events
         noteElement.addEventListener("mouseover", (e) => {
             (<HTMLLIElement>e.target).classList.add("hover");
         });
@@ -266,10 +304,14 @@ const renderNoteList = () => {
         noteElement.addEventListener("drop", (e) => {
             e.preventDefault();
             (<HTMLLIElement>e.target).classList.remove("over");
-        });
+            insertNoteBefore(currentlyDragging!, <HTMLLIElement>e.target);
 
-        noteElement.innerHTML = note.noteTitle;
+        });
         noteElement.addEventListener("click", noteListHandler.bind(null, note.uuid));
+
+        // Set note title and add to sidebar
+        noteElement.innerHTML = note.noteTitle;
+        
         (<HTMLElement>noteListElement).appendChild(noteElement);
     })
 }
