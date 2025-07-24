@@ -22,10 +22,6 @@ hljs.registerLanguage('plaintext', plaintext)
 hljs.registerLanguage('rust', rust)
 hljs.registerLanguage('typescript', typescript)
 
-let darkMode = false;
-let uiTheme = "light"
-let codeStyle = "github"
-
 // Marked object
 const marked = new Marked(
     {
@@ -47,90 +43,147 @@ const timeout = 0;
  * UserNote interface representing a note saved by the user.
  * 
  * @property uuid - Unique identifier for the note
- * @property listOrder - Order in the savedNotes array
- * @property noteTitle - Title of the note
- * @property noteBody - Body of the note in markdown format
+ * @property title - Title of the note
+ * @property body - Body of the note in markdown format
  * @property lastUpdated - Timestamp of the last update in milliseconds since epoch
+ * @property lastSynced - Timestamp of the last sync with remote storage in milliseconds since epoch
  */
 interface UserNote {
     uuid: string,
-    listOrder: number,
-    noteTitle: string,
-    noteBody: string,
-    lastUpdated: number
+    title: string,
+    body: string,
+    lastUpdated: number,
+    lastSynced?: number,
 }
 
-let noteList: UserNote[] = [];
-let currentUUID: string;
+interface NoteStore {
+    noteMap: Map<string, UserNote>,
+    indexToUUID: Map<number, string>,
+    UUIDToIndex: Map<string, number>,
+}
+
+let docketInstance = {
+    settings: {
+        darkMode: false,
+        uiTheme: "light",
+        codeStyle: "github"
+    },
+    tempProps: {
+        draggedNote: null as HTMLLIElement | null,
+    },
+    activeNoteUUID: "",
+    noteStore: {
+        noteMap: new Map<string, UserNote>(),
+        indexToUUID: new Map<number, string>(),
+        UUIDToIndex: new Map<string, number>(),
+    } as NoteStore,
+}
 
 /** 
  * Get editor text from HTML element
  **/ 
-const getEditorText = () => {
+const getHTMLEditorText = () => {
     return (<HTMLInputElement>document.getElementById("mdEditor")).value || ""
 }
 
 /** 
  * Get note title from the HTML element
  **/
-const getNoteTitle = () => {
-    return (<HTMLElement>document.getElementById("fileName")).innerHTML || "unnamed"
-}
-
-/**
- * Get the list order of a note by uuid from `savedNotes`
- * @param uuid UUID of the note to get the list order for
- * @returns List order of the current note
- */
-const getNoteListOrder = (uuid: string): number => {
-    for (let i = 0; i < noteList.length; i++) {
-        if (noteList[i].uuid === uuid) {
-            return i
-        }
-    }
-    return noteList.length; // ERROR: Note not found in savedNotes
-}
-
-/**
- * Get the active note from `savedNotes`
- * @returns `UserNote` object containing title and body of currently active note
- */
-const getActiveNote = (): UserNote => {
-    const noteTitle = getNoteTitle()
-    const noteBody = getEditorText()
-    const uuid = currentUUID || self.crypto.randomUUID()
-    const listOrder = getNoteListOrder(uuid)
-    return {
-        uuid: uuid,
-        listOrder: listOrder,
-        noteTitle: noteTitle,
-        noteBody: noteBody,
-        lastUpdated: Date.now()
-    }
+const getHTMLNoteTitle = () => {
+    return (<HTMLElement>document.getElementById("noteTitle")).innerHTML || "unnamed"
 }
 
 /** 
- * Get note from `savedNotes` by UUID
+ * Return a note object given its UUID. Returns `undefined` if the note does not exist.
  * @param uuid UUID of note to get
  **/
-const getNoteByUUID = (uuid: string) => {
-    // console.log("scanning notes")
-    for (let i = 0; i < noteList.length; i++) {
-        if (noteList[i].uuid == uuid) {
-            return noteList[i]
-        }
+const getNoteByUUID = (uuid: string): UserNote | undefined => {
+    return docketInstance.noteStore.noteMap.get(uuid)
+}
+
+/**
+ * Set a note in the note store by UUID.
+ * @param uuid UUID of note to set
+ * @param note UserNote object to set
+ */
+const setNoteByUUID = (uuid: string, note: UserNote) => {
+    if (!docketInstance.noteStore.noteMap.has(uuid)) {
+        // If the note does not exist, add it to the store
+        const index = docketInstance.noteStore.indexToUUID.size;
+        docketInstance.noteStore.indexToUUID.set(index, uuid);
+        docketInstance.noteStore.UUIDToIndex.set(uuid, index);
+    }
+    docketInstance.noteStore.noteMap.set(uuid, note);
+}
+
+/**
+ * Delete a note from the note store.
+ * @param uuid UUID of note to delete.
+ */
+const deleteNoteByUUID = (uuid: string) => {
+    // Remove note from noteStore
+    docketInstance.noteStore.noteMap.delete(uuid);
+    // Remove note from indexToUUID and UUIDToIndex
+    const index = docketInstance.noteStore.UUIDToIndex.get(uuid);
+    if (index !== undefined) {
+        docketInstance.noteStore.indexToUUID.delete(index);
+        docketInstance.noteStore.UUIDToIndex.delete(uuid);
     }
 }
 
 /**
- * Force update the list order of all notes in `savedNotes` for backwards compatibility.
- * This function sets the `listOrder` property of each note to its index in the `noteList` array.
+ * Move a note to a new index in the note list. This updates the location of all notes in the list to maintain order.
+ * @param uuid UUID of the note to move
+ * @param targetIndex The index to move the note to
  */
-const forceUpdateNoteListOrder = () => {
-    // console.log("force update note list order")
-    noteList.forEach((note: UserNote, index: number) => {
-        note.listOrder = index;
-        setNoteByUUID(note.uuid, note);
+const moveNoteToIndex = (uuid: string, targetIndex: number) => {
+    // Get the previous index of the note
+    const prevIndex = docketInstance.noteStore.UUIDToIndex.get(uuid);
+    if (prevIndex && prevIndex < targetIndex) {
+        // If moving down the list (index increases), decrement all indices between prevIndex and targetIndex
+        for (let i = prevIndex + 1; i <= targetIndex; i++) {
+            const uuidAtIndex = docketInstance.noteStore.indexToUUID.get(i);
+            if (uuidAtIndex) {
+                docketInstance.noteStore.UUIDToIndex.set(uuidAtIndex, i - 1);
+                docketInstance.noteStore.indexToUUID.set(i - 1, uuidAtIndex);
+            }
+        }
+    } else if (prevIndex && prevIndex > targetIndex) {
+        // If moving up the list (index decreases), increment all indices between targetIndex and prevIndex
+        for (let i = prevIndex - 1; i > targetIndex; i--) {
+            const uuidAtIndex = docketInstance.noteStore.indexToUUID.get(i);
+            if (uuidAtIndex) {
+                docketInstance.noteStore.UUIDToIndex.set(uuidAtIndex, i + 1);
+                docketInstance.noteStore.indexToUUID.set(i + 1, uuidAtIndex);
+            }
+        }
+    }
+    // Update the note's index
+    docketInstance.noteStore.UUIDToIndex.set(uuid, targetIndex);
+    docketInstance.noteStore.indexToUUID.set(targetIndex, uuid);
+}
+
+/**
+ * Return the active note from the current docket instance. Returns `undefined` if no active note is set.
+ * @returns `UserNote` object containing title and body of currently active note
+ */
+const getActiveNote = (): UserNote | undefined => {
+    return getNoteByUUID(docketInstance.activeNoteUUID);
+}
+
+// Reformat inline code blocks (PLACEHOLDER UNTIL RENDERER TAGS IMPLEMENTED)
+const formatInlineCode = () => {
+    const codeBlocks = Array.from(document.getElementsByTagName("code"))
+    codeBlocks.forEach((code: HTMLElement) => {
+        const parent = <HTMLElement>code.parentElement
+        code.setAttribute("data-theme", docketInstance.settings.uiTheme)
+        if (parent.tagName != "PRE") {
+            code.style.padding = ".2em .4em"
+            code.style.borderRadius = "5px"
+            code.classList.add("inline-code")
+        } else {
+            parent.setAttribute("data-theme", docketInstance.settings.uiTheme)
+        }
     })
 }
 
@@ -138,132 +191,37 @@ const forceUpdateNoteListOrder = () => {
  * Render markdown from the editor to preview panel.
  */
 const renderMarkdown = () => {
-    // Prevent rendering when editor is minimized
-    const mdRender = <HTMLElement>document.getElementById("mdRender")
-    if (mdRender.style.display === "none") { return }
+    const mdRenderPanel = <HTMLElement>document.getElementById("mdRender")
+    if (mdRenderPanel.style.display === "none") { return } // Prevent rendering when editor is minimized
     
-    const editorText = getEditorText();
-
     // Parse markdown and sanitize HTML output
-    (<HTMLElement>document.getElementById("mdRender")).innerHTML = DOMPurify.sanitize(marked.parse(editorText) as keyof typeof String)
-    
-    // Reformat inline code blocks (PLACEHOLDER UNTIL RENDERER TAGS IMPLEMENTED)
-    const codeBlocks = Array.from(document.getElementsByTagName("code"))
-    codeBlocks.forEach((code: HTMLElement) => {
-        const parent = <HTMLElement>code.parentElement
-        code.setAttribute("data-theme", uiTheme)
-        if (parent.tagName != "PRE") {
-            code.style.padding = ".2em .4em"
-            code.style.borderRadius = "5px"
-            code.classList.add("inline-code")
-        } else {
-            parent.setAttribute("data-theme", uiTheme)
-        }
-        
-    })
-}
+    const editorText = getHTMLEditorText();
+    mdRenderPanel.innerHTML = DOMPurify.sanitize(marked.parse(editorText) as keyof typeof String)  
 
-/** 
- * Update note content in `savedNotes` by UUID
- * @param uuid UUID of note to set
- * @param note UserNote object to set
- **/
-const setNoteByUUID = (uuid: string, note: UserNote) => {
-    // console.log(`setting note with uuid ${uuid}`)
-    for (let i = 0; i < noteList.length; i++) {
-        if (noteList[i].uuid == uuid) {
-            noteList[i] = note;
-            return; 
-        }
-    }
-    noteList.push(note);
-}
-
-/** 
- * Delete note from savedNotes by UUID
- * @param uuid UUID of note to delete
- **/
-const deleteNoteByUUID = (uuid: string) => {
-    const remaining = noteList.filter((note: UserNote) => {
-        if (note.uuid == uuid) {
-            // console.log("remove this one")
-            return false
-        } return true
-    })
-    noteList = remaining;
-    upsertNoteList();
-    // Automatically open the next available note, else create a new note
-    if(noteList.length > 0) {
-        setActiveNote(noteList[0]);
-    } else {
-        newNote();
-    }
+    // Format inline code blocks
+    formatInlineCode();
 }
 
 /**
  * Load active note from `noteList` by UUID to the editor.
  * @param uuid UUID of note to load
  */
-const noteListHandler = (uuid: string) => {
+const noteClickHandler = (uuid: string) => {
     const userNote = <UserNote>getNoteByUUID(uuid);
     setActiveNote(userNote);
 }
-
-// REORDER NOTES
-let currentlyDragging: HTMLLIElement | null = null;
-
-const initOrderNotes = () => {
-    noteList.sort((a, b) => {
-        return getNoteListOrder(a.uuid) - getNoteListOrder(b.uuid)
-    });
-}
-
-const insertNoteBefore = (newElement: HTMLElement, referenceElement: HTMLElement) => {
-    const parent = referenceElement.parentNode;
-    if (parent) {
-        parent.insertBefore(newElement, referenceElement);
-        // Update the list order of the notes
-        const newElementUUID = newElement.getAttribute("data-uuid");
-        const referenceElementUUID = referenceElement.getAttribute("data-uuid");
-        if (newElementUUID && referenceElementUUID) {
-            const newNote = getNoteByUUID(newElementUUID);
-            const referenceNote = getNoteByUUID(referenceElementUUID);
-            if (newNote && referenceNote) {
-                newNote.listOrder = referenceNote.listOrder;
-                // Update the list order of the reference note and all subsequent notes
-                for (let i = newNote.listOrder + 1; i < noteList.length; i++) {
-                    const subsequentNote = noteList[i];
-                    subsequentNote.listOrder++;
-                    setNoteByUUID(subsequentNote.uuid, subsequentNote);
-                }
-                referenceNote.listOrder++;
-                setNoteByUUID(referenceNote.uuid, referenceNote);
-
-                // Finally, set the new note
-                setNoteByUUID(newNote.uuid, newNote);
-            }
-        }
-    } else {
-        console.error("Reference element has no parent node.");
-    }
-}
-
 
 /**
  * Update saved notes in the navbar.
  *
  * This function sorts the saved notes by their order and renders them as links in the navbar.
+ * Also initializes drag-and-drop functionality for reordering notes.
  */
 const renderNoteList = () => {
-    // Log the note list for debugging
-    // noteList.forEach((note: UserNote) => {
-    //     console.log(`Note: ${note.noteTitle}, UUID: ${note.uuid}, Order: ${note.listOrder}`);
-    // })
-
     // Load all saved notes to the navbar
     const noteListElement = document.getElementById("noteList");
     (<HTMLElement>noteListElement).innerHTML = "";
-    noteList.forEach((note: UserNote) => {
+    docketInstance.noteStore.noteMap.forEach((note: UserNote, uuid: string) => {
         // Create a new list item for each note
         let noteElement: HTMLLIElement = document.createElement("li");
         noteElement.className = "noteListItem";
@@ -277,18 +235,19 @@ const renderNoteList = () => {
         noteElement.addEventListener("mouseout", (e) => {
             (<HTMLLIElement>e.target).classList.remove("hover");
         });
+        // Drag and drop functionality
         noteElement.addEventListener("dragstart", (e) => {
             if (e.dataTransfer != undefined) {
                 e.dataTransfer.effectAllowed = "move";
                 e.dataTransfer.setData("text/plain", note.uuid);
-                currentlyDragging = <HTMLLIElement>e.target;
+                docketInstance.tempProps.draggedNote = <HTMLLIElement>e.target;
                 noteElement.classList.add("dragging");
             }
         });
         noteElement.addEventListener("dragend", () => {
-            if (currentlyDragging) {
-                currentlyDragging.classList.remove("dragging");
-                currentlyDragging = null;
+            if (docketInstance.tempProps.draggedNote) {
+                docketInstance.tempProps.draggedNote.classList.remove("dragging");
+                docketInstance.tempProps.draggedNote = null;
             }
         });
         noteElement.addEventListener("dragover", (e) => {
@@ -304,14 +263,18 @@ const renderNoteList = () => {
         noteElement.addEventListener("drop", (e) => {
             e.preventDefault();
             (<HTMLLIElement>e.target).classList.remove("over");
-            insertNoteBefore(currentlyDragging!, <HTMLLIElement>e.target);
-
+            // Move the note to the new index
+            if (e.dataTransfer == undefined) { return; }
+            const draggedUUID = e.dataTransfer.getData("text/plain");
+            const targetUUID = (<HTMLLIElement>e.target).getAttribute("data-uuid");
+            if (!draggedUUID || !targetUUID) { return; }
+            const targetIndex = docketInstance.noteStore.UUIDToIndex.get(targetUUID);
+            moveNoteToIndex(draggedUUID, targetIndex!);
         });
-        noteElement.addEventListener("click", noteListHandler.bind(null, note.uuid));
+        noteElement.addEventListener("click", noteClickHandler.bind(null, note.uuid));
 
         // Set note title and add to sidebar
-        noteElement.innerHTML = note.noteTitle;
-        
+        noteElement.innerHTML = note.title;
         (<HTMLElement>noteListElement).appendChild(noteElement);
     })
 }
@@ -425,9 +388,12 @@ const newNote = () => {
  * @param userNote UserNote object to set as active note
  */
 const setActiveNote = (userNote: UserNote) => {
-    currentUUID = userNote.uuid;
-    (<HTMLElement>document.getElementById("fileName")).innerHTML = userNote.noteTitle;
-    (<HTMLInputElement>document.getElementById("mdEditor")).value = userNote.noteBody;
+    // Set active note UUID
+    docketInstance.activeNoteUUID = userNote.uuid;
+    const noteTitleElement = <HTMLElement>document.getElementById("noteTitle");
+    const noteEditorElement = <HTMLInputElement>document.getElementById("mdEditor");
+    noteTitleElement.innerHTML = docketInstance.noteStore.noteMap.get(userNote.uuid)!.title;
+    noteEditorElement.value = docketInstance.noteStore.noteMap.get(userNote.uuid)!.body;
     saveActiveNote();
     upsertActiveNote();
     renderMarkdown();
