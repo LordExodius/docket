@@ -46,6 +46,8 @@ Here's a few things that I have in mind:
 - **Large Overhauls**
   - Cross device sync!
     - A work in progress - I'm currently designing the backend and database setup necessary to support cross device syncing
+  - Support live or concurrent editing by implementing a CRDT or OT system
+    - I would love to attempt this; but I think it's more important I get basic manual sync working first!
 - **Editor Features**
   - Keyboard shortcuts for common markdown actions (bold, italic, etc.)
   - Import/export markdown files 
