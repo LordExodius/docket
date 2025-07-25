@@ -60,6 +60,7 @@ interface NoteStore {
     noteMap: Map<string, UserNote>,
     indexToUUID: Map<number, string>,
     UUIDToIndex: Map<string, number>,
+    deletedNotes: Set<string>,
 }
 
 let docketInstance = {
@@ -76,7 +77,30 @@ let docketInstance = {
         noteMap: new Map<string, UserNote>(),
         indexToUUID: new Map<number, string>(),
         UUIDToIndex: new Map<string, number>(),
+        deletedNotes: new Set<string>(), // Store deleted notes for syncing later
     } as NoteStore,
+    dbConnection: null as IDBDatabase | null,
+}
+
+const initDbConnection = (): IDBDatabase | undefined=> {
+    const request = indexedDB.open("docketDB", 1);
+    request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        // Create object store for notes
+        if (!db.objectStoreNames.contains("notes")) {
+            db.createObjectStore("notes", { keyPath: "uuid" });
+            db.createObjectStore("settings", { keyPath: "key" });
+            db.createObjectStore("noteOrder", { keyPath: "index" });
+        }
+        return db;
+    };
+    request.onsuccess = (event) => {
+        return (event.target as IDBOpenDBRequest).result;
+    };
+    request.onerror = (event) => {
+        console.error("Error opening indexedDB:", (event.target as IDBOpenDBRequest).error);
+    }
+    return request.result;
 }
 
 /** 
@@ -94,11 +118,21 @@ const getHTMLNoteTitle = () => {
 }
 
 /** 
- * Return a note object given its UUID. Returns `undefined` if the note does not exist.
+ * Return a note object given its UUID. Create a new note if it doesn't exist.
  * @param uuid UUID of note to get
  **/
-const getNoteByUUID = (uuid: string): UserNote | undefined => {
-    return docketInstance.noteStore.noteMap.get(uuid)
+const getNoteByUUID = (uuid: string): UserNote => {
+    
+    return docketInstance.noteStore.noteMap.get(uuid) || createNote();
+}
+
+/**
+ * Return a note object given its index in the note list. Create a new note if it doesn't exist.
+ * @param index Index of note to get
+ **/
+const getNoteByIndex = (index: number): UserNote => {
+    const uuid = docketInstance.noteStore.indexToUUID.get(index);
+    return docketInstance.noteStore.noteMap.get(uuid!) || createNote();
 }
 
 /**
@@ -123,11 +157,38 @@ const setNoteByUUID = (uuid: string, note: UserNote) => {
 const deleteNoteByUUID = (uuid: string) => {
     // Remove note from noteStore
     docketInstance.noteStore.noteMap.delete(uuid);
+
+    // Delete note from indexedDB
+    docketInstance.dbConnection?.transaction("notes", "readwrite")
+        .objectStore("notes")
+        .delete(uuid);
+
+    // Add note to deleted notes set for syncing later
+    docketInstance.noteStore.deletedNotes.add(uuid);
+    
     // Remove note from indexToUUID and UUIDToIndex
     const index = docketInstance.noteStore.UUIDToIndex.get(uuid);
     if (index !== undefined) {
         docketInstance.noteStore.indexToUUID.delete(index);
         docketInstance.noteStore.UUIDToIndex.delete(uuid);
+
+        // If there are notes after this one, decrement their indices and set the active note
+        if (docketInstance.noteStore.indexToUUID.has(index + 1)) {
+            for (let i = index + 1; i < docketInstance.noteStore.indexToUUID.size; i++) {
+                const uuidAtIndex = docketInstance.noteStore.indexToUUID.get(i);
+                if (uuidAtIndex) {
+                    docketInstance.noteStore.UUIDToIndex.set(uuidAtIndex, i - 1);
+                    docketInstance.noteStore.indexToUUID.set(i - 1, uuidAtIndex);
+                }
+            }
+            setActiveNote(getNoteByIndex(index));
+        } else if (docketInstance.noteStore.indexToUUID.has(index - 1)) {
+            // If there are notes before this one, set the active note to the previous one
+            setActiveNote(getNoteByIndex(index - 1));
+        } else {
+            // If no notes left, create a new note
+            setActiveNote(createNote()); 
+        }
     }
 }
 
@@ -225,7 +286,7 @@ const renderNoteList = () => {
         // Create a new list item for each note
         let noteElement: HTMLLIElement = document.createElement("li");
         noteElement.className = "noteListItem";
-        noteElement.setAttribute("data-uuid", note.uuid);
+        noteElement.setAttribute("data-uuid", uuid);
         noteElement.draggable = true;
 
         // Add event listeners for hover, drag, and click events
@@ -279,12 +340,12 @@ const renderNoteList = () => {
     })
 }
 
-/**
- * Save active note to chrome local storage
- */
+/** Save changes to the currently active note to note store. */
 const saveActiveNote = () => {
     const userNote = getActiveNote()
-    chrome.storage.local.set({activeNote: userNote})
+    if (userNote) {
+        docketInstance.noteStore.noteMap.set(userNote.uuid, userNote);
+    }
 }
 
 interface LastExecuted {
@@ -324,61 +385,42 @@ const handleInput = (lastExecuted: LastExecuted) => {
 }
 
 /**
- * Upsert `savedNotes` to local storage. 
- * 
- * Note: this is a full overwrite of local storage `savedNotes`
+ * Save note store to indexedDB.
  */
-const upsertNoteList = () => {
-    chrome.storage.local.set({savedNotes: noteList}, () => {
-        renderNoteList();
-    })
+const saveNoteStore = () => {
 }
 
 /**
  * Upsert currently active note to `savedNotes` and `localStorage`
  */
 const upsertActiveNote = () => {
-    setNoteByUUID(currentUUID, getActiveNote())
-    upsertNoteList();
 }
 
-/**
- * Get all note names from `savedNotes`
- * @returns Promise resolving to an array of note names
- */
-const getNoteNames = (): Promise<string[]> => {
-    return new Promise((resolve, reject) => {
-      chrome.storage.local.get("savedNotes", (result) => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          const noteNames = result.savedNotes?.map((note: UserNote) => note.noteTitle) || [];
-          resolve(noteNames);
-        }
-      });
-    });
-  };
 
 /**
- * Start a new note
+ * Start a new note and add it to the note store and indexedDB.
  */
-const newNote = () => {
-    getNoteNames().then((notes) => {
-        let newNoteName = "new note";
-        // console.log('note names:', notes, notes.includes(newNoteName));
-        let i = 0;
-        while (notes.includes(newNoteName)) {
-            i++;
-            newNoteName = `new note (${i})`;
-            // console.log('new note name:', newNoteName, notes.includes(newNoteName));
-        }
-        setActiveNote({
-            uuid: self.crypto.randomUUID(), 
-            noteTitle: newNoteName, 
-            listOrder: noteList.length,
-            noteBody: "", 
-            lastUpdated: Date.now()});
-    });
+const createNote = (): UserNote => {
+    // Create a new note object
+    const newNote: UserNote = {
+        uuid: crypto.randomUUID(),
+        title: "New Note",
+        body: "",
+        lastUpdated: Date.now(),
+    };
+    
+    // Add the new note to the note store
+    setNoteByUUID(newNote.uuid, newNote);
+
+    // Add new note to indexedDB
+    docketInstance.dbConnection?.transaction("notes", "readwrite")
+        .objectStore("notes")
+        .add(newNote);
+    
+    // Render the updated note list
+    renderNoteList();
+
+    return newNote;
 }
 
 // AUTOLOADING
@@ -404,7 +446,7 @@ const setActiveNote = (userNote: UserNote) => {
  */
 const deleteActiveNote = () => {
     if(confirm("Are you sure you want to delete this note?")) {
-        deleteNoteByUUID(currentUUID)
+        deleteNoteByUUID(docketInstance.activeNoteUUID);
     }
 }
 
