@@ -65,7 +65,6 @@ interface NoteStore {
 
 let docketInstance = {
     settings: {
-        darkMode: false,
         uiTheme: "light",
         codeStyle: "github"
     },
@@ -79,7 +78,7 @@ let docketInstance = {
         UUIDToIndex: new Map<string, number>(),
         deletedNotes: new Set<string>(), // Store deleted notes for syncing later
     } as NoteStore,
-    dbConnection: null as IDBDatabase | null,
+    dbConnection: undefined as IDBDatabase | undefined,
 }
 
 const initDbConnection = (): IDBDatabase | undefined=> {
@@ -89,7 +88,6 @@ const initDbConnection = (): IDBDatabase | undefined=> {
         // Create object store for notes
         if (!db.objectStoreNames.contains("notes")) {
             db.createObjectStore("notes", { keyPath: "uuid" });
-            db.createObjectStore("settings", { keyPath: "key" });
             db.createObjectStore("noteOrder", { keyPath: "index" });
         }
         return db;
@@ -190,6 +188,7 @@ const deleteNoteByUUID = (uuid: string) => {
             setActiveNote(createNote()); 
         }
     }
+    renderNoteList();
 }
 
 /**
@@ -340,11 +339,24 @@ const renderNoteList = () => {
     })
 }
 
-/** Save changes to the currently active note to note store. */
+/** Save changes to the currently active note to note store and indexedDB. */
 const saveActiveNote = () => {
+    if (!docketInstance.dbConnection) {
+        alert("Error: Database connection is not initialized. Note has not been saved.");
+        return;
+    }
     const userNote = getActiveNote()
     if (userNote) {
         docketInstance.noteStore.noteMap.set(userNote.uuid, userNote);
+        // Update the note's title and body from the editor
+        userNote.title = getHTMLNoteTitle();
+        userNote.body = getHTMLEditorText();
+        userNote.lastUpdated = Date.now();
+
+        // Add or update the note in indexedDB
+        const transaction = docketInstance.dbConnection.transaction("notes", "readwrite");
+        const notesStore = transaction.objectStore("notes");
+        notesStore.put(userNote);
     }
 }
 
@@ -359,8 +371,6 @@ const debounce = (lastExecuted: LastExecuted) => {
         // console.log("Debounce")
         renderMarkdown()
         saveActiveNote()
-        upsertActiveNote()
-        upsertNoteList()
     }
 }
 
@@ -378,24 +388,25 @@ const handleInput = (lastExecuted: LastExecuted) => {
     if (currTime - lastExecuted.msSinceLastUpdate > timeout) {
         renderMarkdown()
         saveActiveNote()
-        upsertActiveNote()
-        upsertNoteList()
         lastExecuted.msSinceLastUpdate = currTime
     }
 }
 
 /**
- * Save note store to indexedDB.
+ * Save entire note store to indexedDB.
  */
 const saveNoteStore = () => {
-}
+    if (!docketInstance.dbConnection) {
+        alert("Error: Database connection is not initialized. Note store has not been saved.");
+        return;
+    }
 
-/**
- * Upsert currently active note to `savedNotes` and `localStorage`
- */
-const upsertActiveNote = () => {
+    const transaction = docketInstance.dbConnection.transaction("notes", "readwrite");
+    const notesStore = transaction.objectStore("notes");
+    for (const note of docketInstance.noteStore.noteMap.values()) {
+        notesStore.put(note);
+    }
 }
-
 
 /**
  * Start a new note and add it to the note store and indexedDB.
@@ -437,7 +448,6 @@ const setActiveNote = (userNote: UserNote) => {
     noteTitleElement.innerHTML = docketInstance.noteStore.noteMap.get(userNote.uuid)!.title;
     noteEditorElement.value = docketInstance.noteStore.noteMap.get(userNote.uuid)!.body;
     saveActiveNote();
-    upsertActiveNote();
     renderMarkdown();
 }
 
@@ -455,8 +465,6 @@ const deleteActiveNote = () => {
  * @param theme name of theme to set
  */
 const setTheme = (theme: string) => {
-    const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
-    darkModeSlider.checked = darkMode
     const themedElements = document.querySelectorAll("[data-theme]")
     themedElements.forEach((element) => {
         element.setAttribute("data-theme", theme)
@@ -466,12 +474,10 @@ const setTheme = (theme: string) => {
 /**
  * Toggle dark mode on or off depending on the state of the `darkModeSlider` checkbox.
  */
-const toggleDarkMode = () => {
+const updateDarkMode = () => {
     const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
-    darkMode = darkModeSlider.checked
-    chrome.storage.sync.set({darkMode: darkMode})
-    uiTheme = darkMode ? "dark" : "light"
-    setTheme(uiTheme)
+    docketInstance.settings.uiTheme = darkModeSlider.checked ? "dark" : "light"
+    setTheme(docketInstance.settings.uiTheme)
 }
 
 const testCodeBackground = (): string => {
@@ -497,16 +503,16 @@ const updateCodeStyle = () => {
         oldStyleSheet.parentNode?.removeChild(oldStyleSheet) 
     }
     
-    codeStyle = (<HTMLSelectElement>document.getElementById("codeStyleDropdown")).value
-    chrome.storage.local.set({codeStyle: codeStyle})
+    docketInstance.settings.codeStyle = (<HTMLSelectElement>document.getElementById("codeStyleDropdown")).value
+    chrome.storage.local.set({codeStyle: docketInstance.settings.codeStyle})
     const codeStylesheetElement = document.createElement("link");
     codeStylesheetElement.rel = "stylesheet";
-    codeStylesheetElement.href = `code_themes/${codeStyle}.css`;
+    codeStylesheetElement.href = `code_themes/${docketInstance.settings.codeStyle}.css`;
     codeStylesheetElement.id ="codeStylesheet"
     document.head.appendChild(codeStylesheetElement)
     
     // Set background color for code blocks
-    if (codeStyle === "github") { // Default code background for github theme, since the theme doesn't have a background color
+    if (docketInstance.settings.codeStyle === "github") { // Default code background for github theme, since the theme doesn't have a background color
         (<HTMLElement>document.querySelector(":root")).style.setProperty("--default-code-background", "#eff1f3");
     } else {
         setTimeout(() => {(<HTMLElement>document.querySelector(":root")).style.setProperty("--default-code-background", testCodeBackground());}, updateTimeout)
@@ -537,31 +543,44 @@ const toggleMdRender = () => {
 /**
  * Run all initialization functions
  */
-const runPreload = () => {
-    // Sync settings from cloud
-    chrome.storage.sync.get(null, (result) => {
+const initializeDocket = () => {
+    // Sync notes from indexedDB
+    do {
+        docketInstance.dbConnection = initDbConnection();
+    } while (!docketInstance.dbConnection)
+    
+    // Load settings from local storage (or default to light mode)
+    chrome.storage.sync.get("settings", (result) => {
         const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
-        darkModeSlider.checked = result.darkMode
-        toggleDarkMode()
+        docketInstance.settings.uiTheme = result.uiTheme || "light";
+        darkModeSlider.checked = result.uiTheme === "dark";
+        updateDarkMode();
+
+        // Set code style (default to github)
+        docketInstance.settings.codeStyle = result.codeStyle || "github";
     });
 
-    // Sync notes from local storage
-    chrome.storage.local.get(null, (result) => {
-        if (!result.activeNote) { newNote(); }
-        setActiveNote(result.activeNote); // Load active note
-        noteList = result.savedNotes || []; // Load saved notes
-        // forceUpdateNoteListOrder(); // Force update note list order
-        initOrderNotes(); // Initialize note list order
-        upsertNoteList();
-
-        codeStyle = result.codeStyle || "github"
-        const codeStyleDropdown = <HTMLSelectElement>document.getElementById("codeStyleDropdown")
-        codeStyleDropdown.value = codeStyle
-        updateCodeStyle();
-    })
+    // Load notes from indexedDB
+    const transaction = docketInstance.dbConnection!.transaction("notes", "readonly");
+    const notesStore = transaction.objectStore("notes");
+    const request = notesStore.getAll();
+    request.onsuccess = (event) => {
+        const notes = (event.target as IDBRequest).result;
+        notes.forEach((note: UserNote) => {
+            setNoteByUUID(note.uuid, note);
+        });
+        renderNoteList();
+        
+        // Set active note to the first note or create a new one if none exist
+        if (docketInstance.noteStore.noteMap.size > 0) {
+            setActiveNote(getNoteByIndex(0));
+        } else {
+            setActiveNote(createNote());
+        }
+    };
 }
 
-window.addEventListener("load", runPreload)
+window.addEventListener("load", initializeDocket)
 
 window.addEventListener("resize", toggleMdRender)
 
@@ -571,7 +590,7 @@ codeStyleDropdown.addEventListener("change", updateCodeStyle)
 
 // DARKMODE EVENT LISTENER
 const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
-darkModeSlider.addEventListener("change", toggleDarkMode)
+darkModeSlider.addEventListener("change", updateDarkMode)
 
 const mdRenderSlider = <HTMLInputElement>document.getElementById("mdRenderSlider")
 mdRenderSlider.addEventListener("change", toggleMdRender)
@@ -582,7 +601,7 @@ deleteNoteButton.addEventListener("click", deleteActiveNote)
 
 // NEWNOTE EVENT LISTENER
 const newNoteButton = <HTMLButtonElement>document.getElementById("newNoteButton")
-newNoteButton.addEventListener("click", newNote)
+newNoteButton.addEventListener("click", createNote)
 
 // EDITOR EVENT LISTENERS
 const mdEditor = <HTMLInputElement>document.getElementById("mdEditor")
@@ -593,14 +612,14 @@ const mdTitle = <HTMLElement>document.getElementById("fileName")
  */
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-        runPreload();
+        initializeDocket();
     }
 })
 
 /** 
  * Resync notes when window is focused
  */ 
-window.addEventListener("focus", runPreload)
+window.addEventListener("focus", initializeDocket)
 
 mdEditor.addEventListener("input", 
     handleInput.bind(undefined, {
