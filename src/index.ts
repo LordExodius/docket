@@ -538,6 +538,7 @@ const setTheme = (theme: string) => {
 const updateDarkMode = () => {
     const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
     docketInstance.settings.uiTheme = darkModeSlider.checked ? "dark" : "light"
+    console.log(`Setting theme to ${docketInstance.settings.uiTheme}`)
     setTheme(docketInstance.settings.uiTheme)
 }
 
@@ -610,10 +611,13 @@ const initializeDocket = () => {
     initDbConnection();
     
     // Load settings from local storage
-    chrome.storage.sync.get("settings", (result) => {
-        docketInstance.settings.uiTheme = result.uiTheme || "light";
+    chrome.storage.local.get(null, (result) => {
         docketInstance.settings.codeStyle = result.codeStyle || "github";
+        const codeStyleDropdown = <HTMLSelectElement>document.getElementById("codeStyleDropdown");
+        codeStyleDropdown.value = docketInstance.settings.codeStyle;
+        updateCodeStyle();
 
+        docketInstance.settings.uiTheme = result.uiTheme || "light";
         const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
         darkModeSlider.checked = result.uiTheme === "dark";
         updateDarkMode();
