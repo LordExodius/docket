@@ -81,7 +81,52 @@ let docketInstance = {
     dbConnection: undefined as IDBDatabase | undefined,
 }
 
-const initDbConnection = (): IDBDatabase | undefined=> {
+/**
+ * Decode HTML entities in a string back to their original characters.
+ * This is useful for displaying HTML encoded strings in input boxes such as the title.
+ * @param input HTML encoded string to decode
+ * @returns Decoded string
+ */
+const htmlDecode = (input: string): string => {
+  var doc = new DOMParser().parseFromString(input, "text/html");
+  return doc.documentElement.textContent || "";
+}
+
+
+const loadActiveNoteFromStorage = () => {
+    // Load active note from local storage
+    chrome.storage.local.get("activeNoteUUID", (result) => {
+        if (result.activeNoteUUID) {
+            docketInstance.activeNoteUUID = result.activeNoteUUID;
+            const activeNote = getNoteByUUID(docketInstance.activeNoteUUID);
+            setActiveNote(activeNote);
+        } else {
+            // Set active note to the first note or create a new one if none exist
+            if (docketInstance.noteStore.noteMap.size > 0) {
+                setActiveNote(getNoteByIndex(0));
+            } else {
+                setActiveNote(createNote());
+            }
+        }
+    });
+}
+
+const loadIndexedDbNotes = (db: IDBDatabase) => {
+    // Load notes from indexedDB
+    const transaction = db.transaction("notes", "readonly");
+    const notesStore = transaction.objectStore("notes");
+    const request = notesStore.getAll();
+    request.onsuccess = (event) => {
+        const notes = (event.target as IDBRequest).result;
+        notes.forEach((note: UserNote) => {
+            setNoteByUUID(note.uuid, note);
+        });
+        renderNoteList();
+        loadActiveNoteFromStorage();
+    };
+}
+
+const initDbConnection = async () => {
     const request = indexedDB.open("docketDB", 1);
     request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
@@ -90,16 +135,17 @@ const initDbConnection = (): IDBDatabase | undefined=> {
             db.createObjectStore("notes", { keyPath: "uuid" });
             db.createObjectStore("noteOrder", { keyPath: "index" });
         }
-        return db;
+        docketInstance.dbConnection = db;
+        loadIndexedDbNotes(db);
     };
     request.onsuccess = (event) => {
-        return (event.target as IDBOpenDBRequest).result;
+        docketInstance.dbConnection = request.result;
+        loadIndexedDbNotes(docketInstance.dbConnection);        
     };
     request.onerror = (event) => {
         console.error("Error opening indexedDB:", (event.target as IDBOpenDBRequest).error);
     }
-    return request.result;
-}
+};
 
 /** 
  * Get editor text from HTML element
@@ -221,6 +267,7 @@ const moveNoteToIndex = (uuid: string, targetIndex: number) => {
     // Update the note's index
     docketInstance.noteStore.UUIDToIndex.set(uuid, targetIndex);
     docketInstance.noteStore.indexToUUID.set(targetIndex, uuid);
+    console.log(`Moved note ${uuid} to index ${targetIndex}`);
 }
 
 /**
@@ -278,6 +325,7 @@ const noteClickHandler = (uuid: string) => {
  * Also initializes drag-and-drop functionality for reordering notes.
  */
 const renderNoteList = () => {
+    console.log("Rendering note list...");
     // Load all saved notes to the navbar
     const noteListElement = document.getElementById("noteList");
     (<HTMLElement>noteListElement).innerHTML = "";
@@ -330,11 +378,21 @@ const renderNoteList = () => {
             if (!draggedUUID || !targetUUID) { return; }
             const targetIndex = docketInstance.noteStore.UUIDToIndex.get(targetUUID);
             moveNoteToIndex(draggedUUID, targetIndex!);
+            
+            // Reparent the note list
+            const parentElement = (<HTMLElement>e.target).parentElement;
+            parentElement?.insertBefore(docketInstance.tempProps.draggedNote!, (<HTMLElement>e.target));
+
         });
         noteElement.addEventListener("click", noteClickHandler.bind(null, note.uuid));
 
         // Set note title and add to sidebar
-        noteElement.innerHTML = note.title;
+        if (note.title.length > 24) {
+            noteElement.innerHTML = (DOMPurify.sanitize(note.title)).substring(0, 25) + "...";
+            noteElement.title = note.title; // Set full title as tooltip
+        } else {
+            noteElement.innerHTML = DOMPurify.sanitize(note.title);
+        }
         (<HTMLElement>noteListElement).appendChild(noteElement);
     })
 }
@@ -349,8 +407,8 @@ const saveActiveNote = () => {
     if (userNote) {
         docketInstance.noteStore.noteMap.set(userNote.uuid, userNote);
         // Update the note's title and body from the editor
-        userNote.title = getHTMLNoteTitle();
-        userNote.body = getHTMLEditorText();
+        userNote.title = htmlDecode(getHTMLNoteTitle());
+        userNote.body = htmlDecode(getHTMLEditorText());
         userNote.lastUpdated = Date.now();
 
         // Add or update the note in indexedDB
@@ -371,6 +429,7 @@ const debounce = (lastExecuted: LastExecuted) => {
         // console.log("Debounce")
         renderMarkdown()
         saveActiveNote()
+        renderNoteList()
     }
 }
 
@@ -384,10 +443,11 @@ const handleInput = (lastExecuted: LastExecuted) => {
     lastExecuted.msSinceLastInput = currTime
     setTimeout(debounce, timeout, lastExecuted)
 
-    // rerender every 500ms while typing
+    // rerender every `timeout` ms while typing
     if (currTime - lastExecuted.msSinceLastUpdate > timeout) {
         renderMarkdown()
         saveActiveNote()
+        renderNoteList()
         lastExecuted.msSinceLastUpdate = currTime
     }
 }
@@ -434,8 +494,6 @@ const createNote = (): UserNote => {
     return newNote;
 }
 
-// AUTOLOADING
-
 /**
  * Set active note to a `UserNote` object.
  * @param userNote UserNote object to set as active note
@@ -443,6 +501,8 @@ const createNote = (): UserNote => {
 const setActiveNote = (userNote: UserNote) => {
     // Set active note UUID
     docketInstance.activeNoteUUID = userNote.uuid;
+    // Set active note in local storage
+    chrome.storage.local.set({ activeNoteUUID: docketInstance.activeNoteUUID });
     const noteTitleElement = <HTMLElement>document.getElementById("noteTitle");
     const noteEditorElement = <HTMLInputElement>document.getElementById("mdEditor");
     noteTitleElement.innerHTML = docketInstance.noteStore.noteMap.get(userNote.uuid)!.title;
@@ -465,6 +525,7 @@ const deleteActiveNote = () => {
  * @param theme name of theme to set
  */
 const setTheme = (theme: string) => {
+    chrome.storage.local.set(docketInstance.settings)
     const themedElements = document.querySelectorAll("[data-theme]")
     themedElements.forEach((element) => {
         element.setAttribute("data-theme", theme)
@@ -504,7 +565,7 @@ const updateCodeStyle = () => {
     }
     
     docketInstance.settings.codeStyle = (<HTMLSelectElement>document.getElementById("codeStyleDropdown")).value
-    chrome.storage.local.set({codeStyle: docketInstance.settings.codeStyle})
+    chrome.storage.local.set(docketInstance.settings)
     const codeStylesheetElement = document.createElement("link");
     codeStylesheetElement.rel = "stylesheet";
     codeStylesheetElement.href = `code_themes/${docketInstance.settings.codeStyle}.css`;
@@ -541,43 +602,22 @@ const toggleMdRender = () => {
 }
 
 /**
- * Run all initialization functions
+ * Run all initialization functions to set up the Docket application.
  */
 const initializeDocket = () => {
     // Sync notes from indexedDB
-    do {
-        docketInstance.dbConnection = initDbConnection();
-    } while (!docketInstance.dbConnection)
+    console.log("Initializing IndexedDB connection...")
+    initDbConnection();
     
-    // Load settings from local storage (or default to light mode)
+    // Load settings from local storage
     chrome.storage.sync.get("settings", (result) => {
-        const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
         docketInstance.settings.uiTheme = result.uiTheme || "light";
+        docketInstance.settings.codeStyle = result.codeStyle || "github";
+
+        const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
         darkModeSlider.checked = result.uiTheme === "dark";
         updateDarkMode();
-
-        // Set code style (default to github)
-        docketInstance.settings.codeStyle = result.codeStyle || "github";
     });
-
-    // Load notes from indexedDB
-    const transaction = docketInstance.dbConnection!.transaction("notes", "readonly");
-    const notesStore = transaction.objectStore("notes");
-    const request = notesStore.getAll();
-    request.onsuccess = (event) => {
-        const notes = (event.target as IDBRequest).result;
-        notes.forEach((note: UserNote) => {
-            setNoteByUUID(note.uuid, note);
-        });
-        renderNoteList();
-        
-        // Set active note to the first note or create a new one if none exist
-        if (docketInstance.noteStore.noteMap.size > 0) {
-            setActiveNote(getNoteByIndex(0));
-        } else {
-            setActiveNote(createNote());
-        }
-    };
 }
 
 window.addEventListener("load", initializeDocket)
@@ -605,7 +645,7 @@ newNoteButton.addEventListener("click", createNote)
 
 // EDITOR EVENT LISTENERS
 const mdEditor = <HTMLInputElement>document.getElementById("mdEditor")
-const mdTitle = <HTMLElement>document.getElementById("fileName")
+const mdTitle = <HTMLElement>document.getElementById("noteTitle")
 
 /**
  * Resync notes when tab is hidden and made visible
