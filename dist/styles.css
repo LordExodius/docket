@@ -9,6 +9,7 @@
     --default-secondary-color: #f6f8fa;
     --default-link-color: #489ae3;
     --default-font-color: black;
+    --default-hover-color: #ebebeb;
     --weight-semibold: 600;
 }
 
@@ -49,12 +50,8 @@ a {
     cursor: pointer;
 }
 
-ol {
-    padding: 0;
-    margin: 0;
-}
-
 li {
+
     width: 100%;
     margin: 2px 0;
 }
@@ -73,7 +70,7 @@ button[data-theme="dark"] {
 }
 
 button[data-theme="dark"]:hover {
-    background-color: var(--default-secondary-color);
+    background-color: var(--default-hover-color);
     color: black;
 }
 
@@ -145,6 +142,12 @@ input[type="checkbox"] {
     width: calc(100% - 20px);
     height: 20px;
     flex-direction: row;
+}
+
+#noteList {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
 }
 
 /* The place you type */
@@ -318,6 +321,14 @@ input:checked + .slider:before {
     border-bottom: 1px solid var(--default-border-color);
 }
 
+.noteListItem {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+    padding: 5px;
+    margin: 0px;
+}
+
 #popup {
     width: 400px;
     height: 575px;
@@ -335,7 +346,7 @@ input:checked + .slider:before {
 }
 
 #navBar {
-    background-color: var(--default-secondary-color);
+    /* background-color: var(--default-secondary-color); */
 }
 
 /* FROM MDSTYLES.CSS */
@@ -411,7 +422,7 @@ code {
 .hover {
     background-color: var(--default-code-background);
     color: var(--default-code-color);
-    box-shadow: #1e1e1e 0px 0px 0px 1px;
+    /* box-shadow: #1e1e1e 0px 0px 0px 1px; */
 }
 
 h1, h2, h3,
