@@ -70,7 +70,7 @@ button[data-theme="dark"] {
 }
 
 button[data-theme="dark"]:hover {
-    background-color: var(--default-hover-color);
+    background-color: var(--default-background-color);
     color: black;
 }
 
@@ -420,8 +420,8 @@ code {
 }
 
 .hover {
-    background-color: var(--default-code-background);
-    color: var(--default-code-color);
+    background-color: var(--default-hover-color);
+    color: black;
     /* box-shadow: #1e1e1e 0px 0px 0px 1px; */
 }
 
