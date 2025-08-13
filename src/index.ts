@@ -92,7 +92,6 @@ const htmlDecode = (input: string): string => {
   return doc.documentElement.textContent || "";
 }
 
-
 const loadActiveNoteFromStorage = () => {
     // Load active note from local storage
     chrome.storage.local.get("activeNoteUUID", (result) => {
@@ -140,7 +139,9 @@ const initDbConnection = async () => {
     };
     request.onsuccess = (event) => {
         docketInstance.dbConnection = request.result;
-        loadIndexedDbNotes(docketInstance.dbConnection);        
+        loadNoteOrder();
+        loadIndexedDbNotes(docketInstance.dbConnection);
+         
     };
     request.onerror = (event) => {
         console.error("Error opening indexedDB:", (event.target as IDBOpenDBRequest).error);
@@ -166,7 +167,6 @@ const getHTMLNoteTitle = () => {
  * @param uuid UUID of note to get
  **/
 const getNoteByUUID = (uuid: string): UserNote => {
-    
     return docketInstance.noteStore.noteMap.get(uuid) || createNote();
 }
 
@@ -185,7 +185,7 @@ const getNoteByIndex = (index: number): UserNote => {
  * @param note UserNote object to set
  */
 const setNoteByUUID = (uuid: string, note: UserNote) => {
-    if (!docketInstance.noteStore.noteMap.has(uuid)) {
+    if (!docketInstance.noteStore.UUIDToIndex.has(uuid)) {
         // If the note does not exist, add it to the store
         const index = docketInstance.noteStore.indexToUUID.size;
         docketInstance.noteStore.indexToUUID.set(index, uuid);
@@ -213,27 +213,25 @@ const deleteNoteByUUID = (uuid: string) => {
     // Remove note from indexToUUID and UUIDToIndex
     const index = docketInstance.noteStore.UUIDToIndex.get(uuid);
     if (index !== undefined) {
-        docketInstance.noteStore.indexToUUID.delete(index);
-        docketInstance.noteStore.UUIDToIndex.delete(uuid);
-
         // If there are notes after this one, decrement their indices and set the active note
-        if (docketInstance.noteStore.indexToUUID.has(index + 1)) {
-            for (let i = index + 1; i < docketInstance.noteStore.indexToUUID.size; i++) {
-                const uuidAtIndex = docketInstance.noteStore.indexToUUID.get(i);
-                if (uuidAtIndex) {
-                    docketInstance.noteStore.UUIDToIndex.set(uuidAtIndex, i - 1);
-                    docketInstance.noteStore.indexToUUID.set(i - 1, uuidAtIndex);
-                }
+        for (let i = index + 1; i < docketInstance.noteStore.indexToUUID.size; i++) {
+            let uuidAtIndex = docketInstance.noteStore.indexToUUID.get(i);
+            if (uuidAtIndex) {
+                docketInstance.noteStore.UUIDToIndex.set(uuidAtIndex, i - 1);
+                docketInstance.noteStore.indexToUUID.set(i - 1, uuidAtIndex);
             }
-            setActiveNote(getNoteByIndex(index));
-        } else if (docketInstance.noteStore.indexToUUID.has(index - 1)) {
-            // If there are notes before this one, set the active note to the previous one
-            setActiveNote(getNoteByIndex(index - 1));
+        }
+        docketInstance.noteStore.UUIDToIndex.delete(uuid);
+        docketInstance.noteStore.indexToUUID.delete(docketInstance.noteStore.indexToUUID.size - 1)
+        if (docketInstance.noteStore.noteMap.size > 0) {
+            // Go back to home note
+            setActiveNote(getNoteByIndex(0));
         } else {
             // If no notes left, create a new note
             setActiveNote(createNote()); 
         }
     }
+    saveNoteOrder();
     renderNoteList();
 }
 
@@ -248,7 +246,7 @@ const moveNoteToIndex = (uuid: string, targetIndex: number) => {
     if (prevIndex && prevIndex < targetIndex) {
         // If moving down the list (index increases), decrement all indices between prevIndex and targetIndex
         for (let i = prevIndex + 1; i <= targetIndex; i++) {
-            const uuidAtIndex = docketInstance.noteStore.indexToUUID.get(i);
+            let uuidAtIndex = docketInstance.noteStore.indexToUUID.get(i);
             if (uuidAtIndex) {
                 docketInstance.noteStore.UUIDToIndex.set(uuidAtIndex, i - 1);
                 docketInstance.noteStore.indexToUUID.set(i - 1, uuidAtIndex);
@@ -256,8 +254,8 @@ const moveNoteToIndex = (uuid: string, targetIndex: number) => {
         }
     } else if (prevIndex && prevIndex > targetIndex) {
         // If moving up the list (index decreases), increment all indices between targetIndex and prevIndex
-        for (let i = prevIndex - 1; i > targetIndex; i--) {
-            const uuidAtIndex = docketInstance.noteStore.indexToUUID.get(i);
+        for (let i = prevIndex - 1; i >= targetIndex; i--) {
+            let uuidAtIndex = docketInstance.noteStore.indexToUUID.get(i);
             if (uuidAtIndex) {
                 docketInstance.noteStore.UUIDToIndex.set(uuidAtIndex, i + 1);
                 docketInstance.noteStore.indexToUUID.set(i + 1, uuidAtIndex);
@@ -267,7 +265,8 @@ const moveNoteToIndex = (uuid: string, targetIndex: number) => {
     // Update the note's index
     docketInstance.noteStore.UUIDToIndex.set(uuid, targetIndex);
     docketInstance.noteStore.indexToUUID.set(targetIndex, uuid);
-    console.log(`Moved note ${uuid} to index ${targetIndex}`);
+    saveNoteOrder() // Update indexedDB entry for note order
+    // console.log(`Moved note ${uuid} to index ${targetIndex}`);
 }
 
 /**
@@ -325,15 +324,21 @@ const noteClickHandler = (uuid: string) => {
  * Also initializes drag-and-drop functionality for reordering notes.
  */
 const renderNoteList = () => {
-    console.log("Rendering note list...");
+    // console.log("Rendering note list...");
     // Load all saved notes to the navbar
     const noteListElement = document.getElementById("noteList");
     (<HTMLElement>noteListElement).innerHTML = "";
-    docketInstance.noteStore.noteMap.forEach((note: UserNote, uuid: string) => {
+    let UUIDsByIndex = [...docketInstance.noteStore.UUIDToIndex.entries()].sort((a, b) => a[1] - b[1])
+    // console.log(UUIDsByIndex)
+    UUIDsByIndex.forEach((uuidAndIndex, _index) => {
         // Create a new list item for each note
+        let uuid = uuidAndIndex[0]
+        let note = docketInstance.noteStore.noteMap.get(uuid)
+        if (!note) { return; }
         let noteElement: HTMLLIElement = document.createElement("li");
         noteElement.className = "noteListItem";
         noteElement.setAttribute("data-uuid", uuid);
+        noteElement.title = note.title + " " + uuid; // Set full title as tooltip
         noteElement.draggable = true;
 
         // Add event listeners for hover, drag, and click events
@@ -374,22 +379,27 @@ const renderNoteList = () => {
             // Move the note to the new index
             if (e.dataTransfer == undefined) { return; }
             const draggedUUID = e.dataTransfer.getData("text/plain");
-            const targetUUID = (<HTMLLIElement>e.target).getAttribute("data-uuid");
+            const targetUUID = (<HTMLLIElement>e.target).getAttribute("data-uuid");c
             if (!draggedUUID || !targetUUID) { return; }
-            const targetIndex = docketInstance.noteStore.UUIDToIndex.get(targetUUID);
-            moveNoteToIndex(draggedUUID, targetIndex!);
+            const targetIndex = docketInstance.noteStore.UUIDToIndex.get(targetUUID)!;
             
             // Reparent the note list
             const parentElement = (<HTMLElement>e.target).parentElement;
-            parentElement?.insertBefore(docketInstance.tempProps.draggedNote!, (<HTMLElement>e.target));
-
+            if (targetIndex === docketInstance.noteStore.noteMap.size) {
+                parentElement?.insertBefore(docketInstance.tempProps.draggedNote!, null);
+            } 
+            else if (targetIndex > docketInstance.noteStore.UUIDToIndex.get(draggedUUID)!) {
+                parentElement?.insertBefore(docketInstance.tempProps.draggedNote!, (<HTMLElement>e.target).nextElementSibling);
+            } else {
+                parentElement?.insertBefore(docketInstance.tempProps.draggedNote!, (<HTMLElement>e.target));
+            }
+            moveNoteToIndex(draggedUUID, targetIndex!);
         });
         noteElement.addEventListener("click", noteClickHandler.bind(null, note.uuid));
 
         // Set note title and add to sidebar
         if (note.title.length > 24) {
             noteElement.innerHTML = (DOMPurify.sanitize(note.title)).substring(0, 25) + "...";
-            noteElement.title = note.title; // Set full title as tooltip
         } else {
             noteElement.innerHTML = DOMPurify.sanitize(note.title);
         }
@@ -415,6 +425,30 @@ const saveActiveNote = () => {
         const transaction = docketInstance.dbConnection.transaction("notes", "readwrite");
         const notesStore = transaction.objectStore("notes");
         notesStore.put(userNote);
+    }
+}
+
+const saveNoteOrder = () => {
+    const serialized = JSON.stringify(Array.from(docketInstance.noteStore.indexToUUID))
+    docketInstance.dbConnection?.transaction("noteOrder", "readwrite")
+    .objectStore("noteOrder")
+    .put({index: 1, order: serialized})
+}
+
+const loadNoteOrder = () => {
+    const request = docketInstance.dbConnection!.transaction("noteOrder", "readonly")
+    .objectStore("noteOrder")
+    .getAll(1)
+    request.onsuccess = (event) => {
+        const serialized = (event.target as IDBRequest).result[0]["order"];
+        const parsed = JSON.parse(serialized)
+        
+        docketInstance.noteStore.indexToUUID = new Map(parsed)
+        docketInstance.noteStore.indexToUUID.forEach((uuid: string, index: number) => {
+            docketInstance.noteStore.UUIDToIndex.set(uuid, index);
+        });
+
+        // console.log(docketInstance.noteStore.UUIDToIndex)
     }
 }
 
@@ -490,7 +524,7 @@ const createNote = (): UserNote => {
     
     // Render the updated note list
     renderNoteList();
-
+    saveNoteOrder() 
     return newNote;
 }
 
@@ -538,7 +572,7 @@ const setTheme = (theme: string) => {
 const updateDarkMode = () => {
     const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider")
     docketInstance.settings.uiTheme = darkModeSlider.checked ? "dark" : "light"
-    console.log(`Setting theme to ${docketInstance.settings.uiTheme}`)
+    // console.log(`Setting theme to ${docketInstance.settings.uiTheme}`)
     setTheme(docketInstance.settings.uiTheme)
 }
 
@@ -607,7 +641,7 @@ const toggleMdRender = () => {
  */
 const initializeDocket = () => {
     // Sync notes from indexedDB
-    console.log("Initializing IndexedDB connection...")
+    // console.log("Initializing IndexedDB connection...")
     initDbConnection();
     
     // Load settings from local storage
