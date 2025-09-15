@@ -724,5 +724,56 @@ mdEditor.addEventListener("keydown",
                 mdEditor.selectionEnd || 0,
                 "end"
             )
+        } if (e.key === "b" && e.ctrlKey) {
+            if (mdEditor.selectionStart !== mdEditor.selectionEnd) {
+                e.preventDefault()
+                mdEditor.setRangeText(
+                    "**" + mdEditor.value.substring(mdEditor.selectionStart || 0, mdEditor.selectionEnd || 0) + "**",
+                    mdEditor.selectionStart || 0,
+                    mdEditor.selectionEnd || 0,
+                    "select"
+                )
+            }
+        } if (e.key === "i" && e.ctrlKey) {
+            if (mdEditor.selectionStart !== mdEditor.selectionEnd) {
+                e.preventDefault()
+                mdEditor.setRangeText(
+                    "*" + mdEditor.value.substring(mdEditor.selectionStart || 0, mdEditor.selectionEnd || 0) + "*",
+                    mdEditor.selectionStart || 0,
+                    mdEditor.selectionEnd || 0,
+                    "select"
+                )
+            }
+        } if (e.key === "~") {
+            if (mdEditor.selectionStart !== mdEditor.selectionEnd) {
+                e.preventDefault();
+                mdEditor.setRangeText(
+                    "~~" + mdEditor.value.substring(mdEditor.selectionStart || 0, mdEditor.selectionEnd || 0) + "~~",
+                    mdEditor.selectionStart || 0,
+                    mdEditor.selectionEnd || 0,
+                    "select"
+                )
+            }
+        } if (e.key === "`") {
+            if (mdEditor.selectionStart !== mdEditor.selectionEnd) {
+                e.preventDefault();
+                mdEditor.setRangeText(
+                    "`" + mdEditor.value.substring(mdEditor.selectionStart || 0, mdEditor.selectionEnd || 0) + "`",
+                    mdEditor.selectionStart || 0,
+                    mdEditor.selectionEnd || 0,
+                    "select"
+                )
+            }
+        } if (e.key === "l" && e.ctrlKey) {
+            e.preventDefault();
+            mdEditor.setRangeText(
+                "[" + mdEditor.value.substring(mdEditor.selectionStart || 0, mdEditor.selectionEnd || 0) + "](url)",
+                mdEditor.selectionStart || 0,
+                mdEditor.selectionEnd || 0,
+                "select"
+            )
         }
-})
+        renderMarkdown()
+        saveActiveNote()
+    }
+)
