@@ -2,6 +2,7 @@ import { Marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { markedHighlight } from 'marked-highlight'
 import markedFootnote from 'marked-footnote'
+import markedAlert from "marked-alert";
 import hljs from 'highlight.js/lib/core'
 // Import supported code languages (for size purposes)
 import c from 'highlight.js/lib/languages/c'
@@ -34,7 +35,8 @@ const marked = new Marked(
           return hljs.highlight(code, { language }).value
         }
       }),
-    markedFootnote()
+    markedFootnote(),
+    markedAlert()
 );
 
 const timeout = 0;
