@@ -4,21 +4,21 @@
   --navbar-height: 36px;
 
   /* Backgrounds and borders */
-  --default-background-color: #ffffff;
-  --default-border-color: #e3e6e9;
-  --default-secondary-border-color: #b0b5b9;
-  --default-code-background: #eff1f3;
-  --default-inline-code-background: #eff1f3;
-  --default-markdown-border: #dee3e8;
-  --default-secondary-color: #f6f8fa;
+  --primary-background-color: #ffffff;
+  --primary-border-color: #e3e6e9;
+  --secondary-border-color: #b0b5b9;
+  --primary-code-background: #eff1f3;
+  --primary-inline-code-background: #eff1f3;
+  --primary-markdown-border: #dee3e8;
+  --secondary-color: #f6f8fa;
 
   /* Font colors and styles */
-  --default-link-color: #489ae3;
-  --default-font-color: black;
-  --default-code-color: black;
-  --default-hover-color: #ebebeb;
+  --primary-link-color: #489ae3;
+  --primary-font-color: black;
+  --primary-code-color: black;
+  --primary-hover-color: #ebebeb;
   --weight-semibold: 600;
-  --default-spacing: 0.25rem;
+  --primary-spacing: 0.25rem;
 
   /* Using stack overflow's font stack */
   --ff-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu",
@@ -27,29 +27,29 @@
     "Roboto Mono", Menlo, Monaco, Consolas, monospace;
 
   /* GFM Alerts */
-  --default-note-border: #0a69dd;
-  --default-tip-border: #1a7d34;
-  --default-important-border: #7e4edc;
-  --default-warning-border: #9a6700;
-  --default-caution-border: #d02329;
+  --primary-note-border: #0a69dd;
+  --primary-tip-border: #1a7d34;
+  --primary-important-border: #7e4edc;
+  --primary-warning-border: #9a6700;
+  --primary-caution-border: #d02329;
 }
 
 [data-theme="dark"] {
-  --default-background-color: #1e1e1e;
-  --default-border-color: #585858;
-  --default-font-color: #cccccc;
-  --default-code-color: #cccccc;
-  --default-markdown-border: #585858;
-  --default-secondary-color: #2e2e2e;
+  --primary-background-color: #1e1e1e;
+  --primary-border-color: #585858;
+  --primary-font-color: #cccccc;
+  --primary-code-color: #cccccc;
+  --primary-markdown-border: #585858;
+  --secondary-color: #2e2e2e;
 }
 
 /* Note hover and drag */
 .over {
-  background-color: var(--default-link-color);
+  background-color: var(--primary-link-color);
 }
 
 .hover {
-  background-color: var(--default-hover-color);
+  background-color: var(--primary-hover-color);
   color: black;
   /* box-shadow: #1e1e1e 0px 0px 0px 1px; */
 }
@@ -88,13 +88,12 @@ textarea {
 
 /* Buttons */
 button {
-  &[data-theme="dark"] {
-    background-color: var(--default-background-color);
+  background-color: var(--secondary-color);
+  color: var(--primary-font-color);
+  border: 1px solid var(--secondary-border-color);
+  &:hover {
+    background-color: var(--primary-hover-color);
     color: black;
-    &:hover {
-      background-color: var(--default-hover-color);
-      color: black;
-    }
   }
 }
 
@@ -113,14 +112,14 @@ input[type="checkbox"] {
 #codeStyleDropdown {
   width: 100%;
   box-sizing: border-box;
-  background-color: var(--default-secondary-color);
-  color: var(--default-code-color);
+  background-color: var(--secondary-color);
+  color: var(--primary-code-color);
 }
 
 /* Outermost container */
 #docketBody {
-  background-color: var(--default-background-color);
-  color: var(--default-font-color);
+  background-color: var(--primary-background-color);
+  color: var(--primary-font-color);
   display: flex;
   overflow-x: hidden;
   overflow-y: hidden;
@@ -128,7 +127,7 @@ input[type="checkbox"] {
 
 /* Sidebar */
 #sidebar {
-  background-color: var(--default-background-color);
+  background-color: var(--primary-background-color);
   box-sizing: border-box;
   display: none;
   width: var(--sidebar-width);
@@ -136,7 +135,7 @@ input[type="checkbox"] {
   flex-shrink: 0;
   flex-direction: column;
   justify-content: space-between;
-  border-right: 1px solid var(--default-border-color);
+  border-right: 1px solid var(--primary-border-color);
   height: 100%;
   position: fixed;
   & .footer {
@@ -161,14 +160,14 @@ input[type="checkbox"] {
 
 #navbar {
   height: var(--navbar-height);
-  border-bottom: 1px solid var(--default-border-color);
+  border-bottom: 1px solid var(--primary-border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-inline: calc(var(--default-spacing) * 2);
-  padding-block: calc(var(--default-spacing) * 1);
+  padding-inline: calc(var(--primary-spacing) * 2);
+  padding-block: calc(var(--primary-spacing) * 1);
 
-  background-color: var(--default-secondary-color);
+  background-color: var(--secondary-color);
 }
 
 #noteTitle {
@@ -177,7 +176,7 @@ input[type="checkbox"] {
   text-underline-offset: 2px;
   border: none;
   background: none;
-  color: var(--default-font-color);
+  color: var(--primary-font-color);
   width: 100%;
   &:focus {
     outline: none;
@@ -197,15 +196,15 @@ input[type="checkbox"] {
 
   width: auto;
   flex: 1;
-  margin: calc(var(--default-spacing) * 2);
-  padding-inline: calc(var(--default-spacing) * 3);
-  padding-block: calc(var(--default-spacing) * 2);
+  margin: calc(var(--primary-spacing) * 2);
+  padding-inline: calc(var(--primary-spacing) * 3);
+  padding-block: calc(var(--primary-spacing) * 2);
 }
 
 /* The place you type */
 #markdown-input {
-  background-color: var(--default-background-color);
-  color: var(--default-font-color);
+  background-color: var(--primary-background-color);
+  color: var(--primary-font-color);
   font-family: var(--ff-mono);
   font-weight: 350;
   line-height: 2ch;
@@ -215,10 +214,6 @@ input[type="checkbox"] {
 
 #markdown-output {
   font-size: 1rem;
-}
-
-#fileName {
-  border-bottom: 1px solid var(--default-secondary-border-color);
 }
 
 #noteOptions {
@@ -276,11 +271,11 @@ input[type="checkbox"] {
 }
 
 input:checked + .slider {
-  background-color: var(--default-border-color);
+  background-color: var(--primary-border-color);
 }
 
 input:focus + .slider {
-  box-shadow: 0 0 1px var(--default-secondary-color);
+  box-shadow: 0 0 1px var(--secondary-color);
 }
 
 input:checked + .slider:before {
@@ -290,10 +285,10 @@ input:checked + .slider:before {
 }
 
 .spacer {
-  border-left: 1px solid var(--default-border-color);
-  border-top: 1px solid var(--default-border-color);
+  border-left: 1px solid var(--primary-border-color);
+  border-top: 1px solid var(--primary-border-color);
   margin-block: 0;
-  margin-inline: calc(var(--default-spacing) * 2);
+  margin-inline: calc(var(--primary-spacing) * 2);
 }
 
 .noteListItem {
@@ -312,7 +307,7 @@ input:checked + .slider:before {
 
 @media (width >= 48rem) {
   .spacer {
-    margin-block: calc(var(--default-spacing) * 2);
+    margin-block: calc(var(--primary-spacing) * 2);
     margin-inline: 0;
   }
 
