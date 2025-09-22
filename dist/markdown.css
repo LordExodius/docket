@@ -27,8 +27,8 @@ h6 {
 h1,
 h2 {
   margin-top: 0;
-  margin-bottom: calc(var(--default-spacing) * 4);
-  border-bottom: 1px solid var(--default-markdown-border);
+  margin-bottom: calc(var(--primary-spacing) * 4);
+  border-bottom: 1px solid var(--primary-markdown-border);
 }
 
 h1 {
@@ -66,9 +66,9 @@ ul ul {
 }
 
 hr {
-  margin-block: calc(var(--default-spacing) * 4);
-  border: 1px solid var(--default-border-color);
-  border-color: var(--default-border-color);
+  margin-block: calc(var(--primary-spacing) * 4);
+  border: 1px solid var(--primary-border-color);
+  border-color: var(--primary-border-color);
 }
 
 table {
@@ -79,12 +79,12 @@ table {
 table,
 th,
 td {
-  border: 1px solid var(--default-border-color);
+  border: 1px solid var(--primary-border-color);
 }
 
 th,
 td {
-  padding: calc(var(--default-spacing) * 3) calc(var(--default-spacing) * 2);
+  padding: calc(var(--primary-spacing) * 1) calc(var(--primary-spacing) * 3);
 }
 
 th,
@@ -94,10 +94,10 @@ strong {
 
 blockquote,
 .markdown-alert {
-  border-left: 4px solid var(--default-border-color);
-  padding: calc(var(--default-spacing) * 2);
-  padding-left: calc(var(--default-spacing) * 4);
-  background-color: var(--default-secondary-color);
+  border-left: 4px solid var(--primary-border-color);
+  padding: calc(var(--primary-spacing) * 2);
+  padding-left: calc(var(--primary-spacing) * 4);
+  background-color: var(--secondary-color);
   p {
     margin: 0;
   }
@@ -105,17 +105,17 @@ blockquote,
 
 ul,
 ol {
-  padding-inline-start: calc(var(--default-spacing) * 8);
+  padding-inline-start: calc(var(--primary-spacing) * 8);
 }
 
 a {
   cursor: pointer;
   &:link {
-    color: var(--default-link-color);
+    color: var(--primary-link-color);
     text-decoration: none;
   }
   &:visited {
-    color: var(--default-link-color);
+    color: var(--primary-link-color);
   }
   &:hover {
     text-decoration: underline;
@@ -129,19 +129,19 @@ code {
 
   /* Inline code */
   &:not(pre > code) {
-    padding-inline: calc(var(--default-spacing));
-    padding-block: calc(var(--default-spacing) * 0.5);
-    border-radius: var(--default-spacing);
-    background-color: var(--default-secondary-color);
+    padding-inline: calc(var(--primary-spacing));
+    padding-block: calc(var(--primary-spacing) * 0.5);
+    border-radius: var(--primary-spacing);
+    background-color: var(--secondary-color);
   }
 }
 
 /* Code blocks */
 pre:has(> code) {
-  padding-inline: calc(var(--default-spacing) * 3);
-  padding-block: calc(var(--default-spacing) * 2);
+  padding-inline: calc(var(--primary-spacing) * 3);
+  padding-block: calc(var(--primary-spacing) * 2);
   overflow-x: auto;
-  background-color: var(--default-code-background);
+  background-color: var(--primary-code-background);
 }
 
 /* Images */
@@ -162,56 +162,56 @@ img {
 
 /* Note */
 .markdown-alert-note {
-  border-color: var(--default-note-border);
-  background-color: var(--default-secondary-color);
+  border-color: var(--primary-note-border);
+  background-color: var(--secondary-color);
   .markdown-alert-title {
-    color: var(--default-note-border);
+    color: var(--primary-note-border);
   }
   .markdown-alert-title svg {
-    fill: var(--default-note-border);
+    fill: var(--primary-note-border);
   }
 }
 /* Tip */
 .markdown-alert-tip {
-  border-color: var(--default-tip-border);
-  background-color: var(--default-secondary-color);
+  border-color: var(--primary-tip-border);
+  background-color: var(--secondary-color);
   .markdown-alert-title {
-    color: var(--default-tip-border);
+    color: var(--primary-tip-border);
   }
   .markdown-alert-title svg {
-    fill: var(--default-tip-border);
+    fill: var(--primary-tip-border);
   }
 }
 /* Important */
 .markdown-alert-important {
-  border-color: var(--default-important-border);
-  background-color: var(--default-secondary-color);
+  border-color: var(--primary-important-border);
+  background-color: var(--secondary-color);
   .markdown-alert-title {
-    color: var(--default-important-border);
+    color: var(--primary-important-border);
   }
   .markdown-alert-title svg {
-    fill: var(--default-important-border);
+    fill: var(--primary-important-border);
   }
 }
 /* Warning */
 .markdown-alert-warning {
-  border-color: var(--default-warning-border);
-  background-color: var(--default-secondary-color);
+  border-color: var(--primary-warning-border);
+  background-color: var(--secondary-color);
   .markdown-alert-title {
-    color: var(--default-warning-border);
+    color: var(--primary-warning-border);
   }
   .markdown-alert-title svg {
-    fill: var(--default-warning-border);
+    fill: var(--primary-warning-border);
   }
 }
 /* Caution */
 .markdown-alert-caution {
-  border-color: var(--default-caution-border);
-  background-color: var(--default-secondary-color);
+  border-color: var(--primary-caution-border);
+  background-color: var(--secondary-color);
   .markdown-alert-title {
-    color: var(--default-caution-border);
+    color: var(--primary-caution-border);
   }
   .markdown-alert-title svg {
-    fill: var(--default-caution-border);
+    fill: var(--primary-caution-border);
   }
 }
