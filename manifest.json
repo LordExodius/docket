@@ -8,7 +8,7 @@
     },
     "action": {
         "default_icon": "icons/docket.png",
-        "default_popup": "dist/popupIndex.html"
+        "default_popup": "dist/index.html"
     },
     "permissions": [
         "storage"
