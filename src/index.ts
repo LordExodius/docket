@@ -741,7 +741,7 @@ const toggleMarkdownOutput = () => {
 const toggleSidebar = () => {
   const sidebar = <HTMLElement>document.getElementById("sidebar");
   console.log(sidebar.style.display);
-  if (!sidebar.style.display || sidebar.style.display === "none") {
+  if ((!sidebar.style.display && window.innerWidth < 768) || sidebar.style.display === "none") {
     sidebar.style.display = "flex";
   } else {
     sidebar.style.display = "none";
@@ -772,6 +772,13 @@ const initializeDocket = () => {
     darkModeSlider.checked = result.uiTheme === "dark";
     toggleDarkMode();
   });
+
+  // Configure popup specific elements
+  const bodyElement = <HTMLElement>document.body;
+  if (bodyElement.classList.contains("popup")) {
+    // Display notes in reader mode by default
+    toggleMarkdownInput();
+  }
 };
 
 window.addEventListener("load", initializeDocket);
