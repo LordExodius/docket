@@ -15,10 +15,10 @@
     <header>
       <h6>Docket ></h6>
       <div id="noteOptions">
-        <button id="newNoteButton">📝</button>
-        <button id="deleteNoteButton">🗑️</button>
+        <button id="newNoteButton" title="New Note">📝</button>
+        <button id="deleteNoteButton" title="Delete Note">🗑️</button>
       </div>
-      <div class="spacer"></div>
+      <div class="horizontalDivider"></div>
       <ol id="noteList"></ol>
     </header>
 
@@ -27,7 +27,6 @@
         <select id="codeStyleDropdown">
           <option value="github">github</option>
           <option value="github-dark">github-dark</option>
-          <option value="github-dark-dimmed">github-dark-dimmed</option>
         </select>
       </label><br>
       <div id="darkModeSetting" class="settingToggle">
@@ -51,12 +50,16 @@
       <div id="navLeft">
         <input type="text" id="noteTitle">
       </div>
-      <div id="navRight"></div>
+      <div id="navRight">
+        <button id="readerModeButton" title="Reader Mode">👁️</button>
+        <div class="verticalDivider"></div>
+        <button id="downloadNoteButton" title="Download Note">⬇️</button>
+      </div>
     </header>
     <div id="editor">
-      <textarea title="Input" id="markdown-input" class="bodyText" spellcheck="false"></textarea>
-      <div class="spacer"></div>
-      <div id="markdown-output" class="bodyText"></div>
+      <textarea title="Input" id="markdownInput" class="bodyText" spellcheck="false"></textarea>
+      <div id="editorDivider" class="adaptiveDivider"></div>
+      <div id="markdownOutput" class="bodyText"></div>
     </div>
   </main>
   <script src="bundle.js"></script>

@@ -158,7 +158,7 @@ const initDbConnection = async () => {
  **/
 const getHTMLEditorText = () => {
   return (
-    (<HTMLInputElement>document.getElementById("markdown-input")).value || ""
+    (<HTMLInputElement>document.getElementById("markdownInput")).value || ""
   );
 };
 
@@ -297,7 +297,7 @@ const getActiveNote = (): UserNote | undefined => {
  * Render markdown from the editor to preview panel.
  */
 const renderMarkdown = () => {
-  const mdRenderPanel = <HTMLElement>document.getElementById("markdown-output");
+  const mdRenderPanel = <HTMLElement>document.getElementById("markdownOutput");
   if (mdRenderPanel.style.display === "none") {
     return;
   } // Prevent rendering when editor is minimized
@@ -582,9 +582,11 @@ const setActiveNote = (userNote: UserNote) => {
   docketInstance.activeNoteUUID = userNote.uuid;
   // Set active note in local storage
   chrome.storage.local.set({ activeNoteUUID: docketInstance.activeNoteUUID });
-  const noteTitleElement = <HTMLInputElement>document.getElementById("noteTitle");
+  const noteTitleElement = <HTMLInputElement>(
+    document.getElementById("noteTitle")
+  );
   const noteEditorElement = <HTMLInputElement>(
-    document.getElementById("markdown-input")
+    document.getElementById("markdownInput")
   );
   noteTitleElement.value = docketInstance.noteStore.noteMap.get(
     userNote.uuid
@@ -605,6 +607,22 @@ const deleteActiveNote = () => {
   }
 };
 
+const downloadActiveNote = () => {
+  const activeNote = getActiveNote();
+  if (!activeNote) {
+    return;
+  }
+  const blob = new Blob([activeNote.body], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = activeNote.title + ".md";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
 /**
  * Set theme for all elements with `data-theme` attribute.
  * @param theme name of theme to set
@@ -620,7 +638,7 @@ const setTheme = (theme: string) => {
 /**
  * Toggle dark mode on or off depending on the state of the `darkModeSlider` checkbox.
  */
-const updateDarkMode = () => {
+const toggleDarkMode = () => {
   const darkModeSlider = <HTMLInputElement>(
     document.getElementById("darkModeSlider")
   );
@@ -668,13 +686,13 @@ const updateCodeStyle = () => {
   if (docketInstance.settings.codeStyle === "github") {
     // Default code background for github theme, since the theme doesn't have a background color
     (<HTMLElement>document.querySelector(":root")).style.setProperty(
-      "--default-code-background",
+      "--primary-code-background",
       "#eff1f3"
     );
   } else {
     setTimeout(() => {
       (<HTMLElement>document.querySelector(":root")).style.setProperty(
-        "--default-code-background",
+        "--primary-code-background",
         testCodeBackground()
       );
     }, updateTimeout);
@@ -682,25 +700,38 @@ const updateCodeStyle = () => {
 };
 
 /**
- * Set display of markdown renderer
- * @param display CSS display property
+ * Toggle markdown input display on or off.
  */
-const setMdRenderDisplay = (display: string) => {
-  (<HTMLElement>document.getElementById("markdown-output")).style.display =
-    display;
+const toggleMarkdownInput = () => {
+  const markdownInput = <HTMLInputElement>(
+    document.getElementById("markdownInput")
+  );
+  const editorDivider = <HTMLElement>(
+    document.getElementById("editorDivider")
+  );
+  if (!markdownInput.style.display || markdownInput.style.display === "block") {
+    markdownInput.style.display = "none";
+    editorDivider.style.display = "none";
+  } else {
+    markdownInput.style.display = "block";
+    editorDivider.style.display = "block";
+  }
 };
 
 /**
  * Toggle markdown renderer display based on editor width or value of `mdRenderToggle` checkbox.
  */
-const toggleMdRender = () => {
+const toggleMarkdownOutput = () => {
   const mdRenderSlider = <HTMLInputElement>(
     document.getElementById("mdRenderSlider")
   );
+  const markdownOutput = <HTMLElement>(
+    document.getElementById("markdownOutput")
+  );
   if (!mdRenderSlider.checked) {
-    setMdRenderDisplay("none");
+    markdownOutput.style.display = "none";
   } else {
-    setMdRenderDisplay("block");
+    markdownOutput.style.display = "block";
   }
 };
 
@@ -709,7 +740,8 @@ const toggleMdRender = () => {
  */
 const toggleSidebar = () => {
   const sidebar = <HTMLElement>document.getElementById("sidebar");
-  if (sidebar.style.display === "none") {
+  console.log(sidebar.style.display);
+  if (!sidebar.style.display || sidebar.style.display === "none") {
     sidebar.style.display = "flex";
   } else {
     sidebar.style.display = "none";
@@ -738,14 +770,15 @@ const initializeDocket = () => {
       document.getElementById("darkModeSlider")
     );
     darkModeSlider.checked = result.uiTheme === "dark";
-    updateDarkMode();
+    toggleDarkMode();
   });
 };
 
 window.addEventListener("load", initializeDocket);
 
-window.addEventListener("resize", toggleMdRender);
+window.addEventListener("resize", toggleMarkdownOutput);
 
+// SIDEBAR TOGGLE EVENT LISTENER
 window.addEventListener("keydown", (e) => {
   if (e.key === "h" && e.ctrlKey) {
     e.preventDefault();
@@ -763,12 +796,12 @@ codeStyleDropdown.addEventListener("change", updateCodeStyle);
 const darkModeSlider = <HTMLInputElement>(
   document.getElementById("darkModeSlider")
 );
-darkModeSlider.addEventListener("change", updateDarkMode);
+darkModeSlider.addEventListener("change", toggleDarkMode);
 
 const mdRenderSlider = <HTMLInputElement>(
   document.getElementById("mdRenderSlider")
 );
-mdRenderSlider.addEventListener("change", toggleMdRender);
+mdRenderSlider.addEventListener("change", toggleMarkdownOutput);
 
 // DELETE NOTE EVENT LISTENER
 const deleteNoteButton = <HTMLButtonElement>(
@@ -782,9 +815,21 @@ const newNoteButton = <HTMLButtonElement>(
 );
 newNoteButton.addEventListener("click", createNote);
 
+// DOWNLOAD NOTE EVENT LISTENER
+const downloadNoteButton = <HTMLButtonElement>(
+  document.getElementById("downloadNoteButton")
+);
+downloadNoteButton.addEventListener("click", downloadActiveNote);
+
+// TOGGLE MARKDOWN INPUT EVENT LISTENER
+const toggleMarkdownInputButton = <HTMLButtonElement>(
+  document.getElementById("readerModeButton")
+);
+toggleMarkdownInputButton.addEventListener("click", toggleMarkdownInput);
+
 // EDITOR EVENT LISTENERS
 const markdownInput = <HTMLInputElement>(
-  document.getElementById("markdown-input")
+  document.getElementById("markdownInput")
 );
 const mdTitle = <HTMLElement>document.getElementById("noteTitle");
 
