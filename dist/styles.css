@@ -46,17 +46,6 @@
   --secondary-color: #2e2e2e;
 }
 
-/* Note hover and drag */
-.over {
-  background-color: var(--primary-link-color);
-}
-
-.hover {
-  background-color: var(--primary-hover-color);
-  color: black;
-  /* box-shadow: #1e1e1e 0px 0px 0px 1px; */
-}
-
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 10px;
@@ -324,6 +313,15 @@ input:checked + .slider:before {
   box-sizing: border-box;
   padding: 2px;
   margin: 0px;
+  /* Note hover and drag */
+  &.over {
+    background-color: var(--primary-link-color);
+  }
+  &.hover {
+    background-color: var(--primary-hover-color);
+    color: black;
+    /* box-shadow: #1e1e1e 0px 0px 0px 1px; */
+  }
 }
 
 .settingToggle {

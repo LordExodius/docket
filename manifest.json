@@ -11,6 +11,15 @@
         "default_popup": "dist/popupIndex.html"
     },
     "permissions": [
-        "storage"
-    ]
+        "storage",
+        "identity"
+    ],
+    "oauth2": {
+        "client_id": "YOUR_CLIENT",
+        "scopes": [
+            "openid",
+            "email",
+            "profile"
+        ]
+    }
 }
