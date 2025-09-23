@@ -44,26 +44,20 @@ There's a lot of improvements and features I'd like to add, and feature requests
 
 Here's a few things that I have in mind:
 - **Large Overhauls**
-  - Cross device sync!
+  - [ ] Cross device sync!
     - A work in progress - I'm currently designing the backend and database setup necessary to support cross device syncing
-  - Support live or concurrent editing by implementing a CRDT or OT system
+  - [ ] Support live or concurrent editing by implementing a CRDT or OT system
     - I would love to attempt this; but I think it's more important I get basic manual sync working first!
 - **Editor Features**
-  - Keyboard shortcuts for common markdown actions (bold, italic, etc.)
-  - Import/export markdown files 
+  - [x] Keyboard shortcuts for common markdown actions (bold, italic, etc.)
+  - [x] (Kind of - still working on import and BULK export) Import/export markdown files 
     - This might not be possible due to restrictions on file access in chrome extensions
     - Also, just paste the markdown into the editor, dummy 🥱
 - **Autosave**
-  - ~~Query chrome storage when a user refocuses the tab or extension to prevent overwriting changes when multiple instances of docket are open~~ COMPLETE
-- **Settings**
-  - Change the font size
-  - Change the font family
-  - Change parser options (like enabling/disabling GFM)
+  - [x] Query chrome storage when a user refocuses the tab or extension to prevent overwriting changes when multiple instances of docket are open
 - **Optimizations/QoL**
-  - Work in progress - Reorder notes
-  - Lazy render markdown (only rerender when the markdown changes)
+  - [x] Reorder notes
+  - [ ] Lazy render markdown (only rerender when the markdown changes)
     - This is a bit tricky because I would need a way to sourcemap the markdown to the rendered `html`, which is nontrivial.
-  - Scroll sync between the markdown and the rendered `html`
+  - [ ] Scroll sync between the markdown and the rendered `html`
     - Again, this probably requires sourcemapping the markdown to the rendered `html`.
-  - Extend/rewrite some of the parsing rules to tag the `html` elements with classes for easier styling
-    - This would allow for more advanced styling options and also remove the need for the hacky `css` overrides I have in place for things like inline code blocks.
