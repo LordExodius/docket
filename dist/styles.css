@@ -37,8 +37,11 @@
 [data-theme="dark"] {
   --primary-background-color: #1e1e1e;
   --primary-border-color: #585858;
+  --secondary-border-color: #3f3e3e;
   --primary-font-color: #cccccc;
   --primary-code-color: #cccccc;
+  --primary-code-background: #2e2e2e;
+  --primary-inline-code-background: #2e2e2e;
   --primary-markdown-border: #585858;
   --secondary-color: #2e2e2e;
 }
@@ -90,7 +93,9 @@ textarea {
 button {
   background-color: var(--secondary-color);
   color: var(--primary-font-color);
-  border: 1px solid var(--secondary-border-color);
+  /* border: 1px solid var(--secondary-border-color); */
+  border: none;
+  border-radius: 5px;
   &:hover {
     background-color: var(--primary-hover-color);
     color: black;
@@ -148,6 +153,7 @@ input[type="checkbox"] {
 }
 
 #noteList {
+  height: 100%;
   list-style-type: none;
   margin: 0;
   padding: 0;
@@ -166,8 +172,13 @@ input[type="checkbox"] {
   justify-content: space-between;
   padding-inline: calc(var(--primary-spacing) * 2);
   padding-block: calc(var(--primary-spacing) * 1);
-
   background-color: var(--secondary-color);
+}
+
+#navLeft, #navRight {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--primary-spacing) * 2);
 }
 
 #noteTitle {
@@ -189,8 +200,8 @@ input[type="checkbox"] {
   height: calc(100% - var(--navbar-height) - 8px);
 }
 
-#markdown-input,
-#markdown-output {
+#markdownInput,
+#markdownOutput {
   overflow-y: auto;
   overflow-x: hidden;
 
@@ -202,7 +213,7 @@ input[type="checkbox"] {
 }
 
 /* The place you type */
-#markdown-input {
+#markdownInput {
   background-color: var(--primary-background-color);
   color: var(--primary-font-color);
   font-family: var(--ff-mono);
@@ -212,7 +223,7 @@ input[type="checkbox"] {
   border: 0;
 }
 
-#markdown-output {
+#markdownOutput {
   font-size: 1rem;
 }
 
@@ -284,7 +295,19 @@ input:checked + .slider:before {
   transform: translateX(10px);
 }
 
-.spacer {
+.verticalDivider {
+  width: 1px;
+  height: calc(var(--primary-spacing) * 4);
+  background-color: var(--secondary-border-color);
+}
+
+.horizontalDivider {
+  border-top: 1px solid var(--primary-border-color);
+  margin-block: calc(var(--primary-spacing) * 2);
+  margin-inline: 0;
+}
+
+.adaptiveDivider {
   border-left: 1px solid var(--primary-border-color);
   border-top: 1px solid var(--primary-border-color);
   margin-block: 0;
@@ -306,7 +329,7 @@ input:checked + .slider:before {
 }
 
 @media (width >= 48rem) {
-  .spacer {
+  .adaptiveDivider {
     margin-block: calc(var(--primary-spacing) * 2);
     margin-inline: 0;
   }
