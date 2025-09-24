@@ -740,7 +740,6 @@ const toggleMarkdownOutput = () => {
  */
 const toggleSidebar = () => {
   const sidebar = <HTMLElement>document.getElementById("sidebar");
-  console.log(sidebar.style.display);
   if ((!sidebar.style.display && window.innerWidth < 768) || sidebar.style.display === "none") {
     sidebar.style.display = "flex";
   } else {
