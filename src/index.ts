@@ -138,7 +138,6 @@ const initDbConnection = async () => {
       db.createObjectStore("noteOrder", { keyPath: "index" });
     }
     docketInstance.dbConnection = db;
-    loadIndexedDbNotes(db);
   };
   request.onsuccess = (event) => {
     docketInstance.dbConnection = request.result;
