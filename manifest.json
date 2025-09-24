@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "docket",
     "description": "markdown editor tab",
-    "version": "0.2",
+    "version": "0.3",
     "chrome_url_overrides": {
         "newtab": "dist/index.html"
     },
@@ -11,6 +11,15 @@
         "default_popup": "dist/popupIndex.html"
     },
     "permissions": [
-        "storage"
-    ]
+        "storage",
+        "identity"
+    ],
+    "oauth2": {
+        "client_id": "YOUR_CLIENT",
+        "scopes": [
+            "openid",
+            "email",
+            "profile"
+        ]
+    }
 }
