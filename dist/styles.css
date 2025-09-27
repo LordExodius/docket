@@ -88,9 +88,9 @@ textarea {
 button {
   background-color: var(--secondary-color);
   color: var(--primary-font-color);
-  /* border: 1px solid var(--secondary-border-color); */
   border: none;
   border-radius: 5px;
+  cursor: pointer;
   &:hover {
     background-color: var(--primary-hover-color);
     color: black;
@@ -321,6 +321,7 @@ input:checked + .slider:before {
   box-sizing: border-box;
   padding: 2px;
   margin: 0px;
+  cursor: pointer;
   /* Note hover and drag */
   &.over {
     background-color: var(--primary-link-color);

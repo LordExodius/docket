@@ -4,6 +4,9 @@ import { markedHighlight } from "marked-highlight";
 import markedFootnote from "marked-footnote";
 import markedAlert from "marked-alert";
 import hljs from "highlight.js/lib/core";
+
+import { UserNote, NoteStore } from "./definitions";
+
 // Import supported code languages (for size purposes)
 import c from "highlight.js/lib/languages/c";
 import cpp from "highlight.js/lib/languages/cpp";
@@ -14,6 +17,7 @@ import python from "highlight.js/lib/languages/python";
 import rust from "highlight.js/lib/languages/rust";
 import typescript from "highlight.js/lib/languages/typescript";
 
+// Register languages to highlight.js
 hljs.registerLanguage("c", c);
 hljs.registerLanguage("cpp", cpp);
 hljs.registerLanguage("java", java);
@@ -41,32 +45,8 @@ const marked = new Marked(
 
 const timeout = 0;
 
-/**
- * UserNote interface representing a note saved by the user.
- *
- * @property uuid - Unique identifier for the note
- * @property title - Title of the note
- * @property body - Body of the note in markdown format
- * @property lastUpdated - Timestamp of the last update in milliseconds since epoch
- * @property lastSynced - Timestamp of the last sync with remote storage in milliseconds since epoch
- */
-interface UserNote {
-  uuid: string;
-  title: string;
-  body: string;
-  lastUpdated: number;
-  lastSynced?: number;
-}
-
-interface NoteStore {
-  noteMap: Map<string, UserNote>;
-  indexToUUID: Map<number, string>;
-  UUIDToIndex: Map<string, number>;
-  deletedNotes: Set<string>;
-}
-
 // Global states for docket
-let docketInstance = {
+let docketProps = {
   settings: {
     uiTheme: "light",
     codeStyle: "github",
@@ -95,16 +75,19 @@ const htmlDecode = (input: string): string => {
   return doc.documentElement.textContent || "";
 };
 
-const loadActiveNoteFromStorage = () => {
-  // Load active note from local storage
+/**
+ * Load active note UUID from local storage and set active note.
+ * If no active note is set, set the active note to the first note in the note store or create a new one if none exist.
+ */
+const loadActiveNote = () => {
   chrome.storage.local.get("activeNoteUUID", (result) => {
     if (result.activeNoteUUID) {
-      docketInstance.activeNoteUUID = result.activeNoteUUID;
-      const activeNote = getNoteByUUID(docketInstance.activeNoteUUID);
+      docketProps.activeNoteUUID = result.activeNoteUUID;
+      const activeNote = getNoteByUUID(docketProps.activeNoteUUID);
       setActiveNote(activeNote);
     } else {
       // Set active note to the first note or create a new one if none exist
-      if (docketInstance.noteStore.noteMap.size > 0) {
+      if (docketProps.noteStore.noteMap.size > 0) {
         setActiveNote(getNoteByIndex(0));
       } else {
         setActiveNote(createNote());
@@ -113,8 +96,11 @@ const loadActiveNoteFromStorage = () => {
   });
 };
 
+/**
+ * Load notes from IndexedDB to the active note store.
+ * @param db IndexedDB database connection
+ */
 const loadIndexedDbNotes = (db: IDBDatabase) => {
-  // Load notes from indexedDB
   const transaction = db.transaction("notes", "readonly");
   const notesStore = transaction.objectStore("notes");
   const request = notesStore.getAll();
@@ -124,7 +110,7 @@ const loadIndexedDbNotes = (db: IDBDatabase) => {
       setNoteByUUID(note.uuid, note);
     });
     renderNoteList();
-    loadActiveNoteFromStorage();
+    loadActiveNote();
   };
 };
 
@@ -137,12 +123,12 @@ const initDbConnection = async () => {
       db.createObjectStore("notes", { keyPath: "uuid" });
       db.createObjectStore("noteOrder", { keyPath: "index" });
     }
-    docketInstance.dbConnection = db;
+    docketProps.dbConnection = db;
   };
   request.onsuccess = (event) => {
-    docketInstance.dbConnection = request.result;
-    loadNoteOrder();
-    loadIndexedDbNotes(docketInstance.dbConnection);
+    docketProps.dbConnection = request.result;
+    loadIndexedDbNoteOrder(docketProps.dbConnection);
+    loadIndexedDbNotes(docketProps.dbConnection);
   };
   request.onerror = (event) => {
     console.error(
@@ -175,7 +161,7 @@ const getHTMLNoteTitle = () => {
  * @param uuid UUID of note to get
  **/
 const getNoteByUUID = (uuid: string): UserNote => {
-  return docketInstance.noteStore.noteMap.get(uuid) || createNote();
+  return docketProps.noteStore.noteMap.get(uuid) || createNote();
 };
 
 /**
@@ -183,8 +169,8 @@ const getNoteByUUID = (uuid: string): UserNote => {
  * @param index Index of note to get
  **/
 const getNoteByIndex = (index: number): UserNote => {
-  const uuid = docketInstance.noteStore.indexToUUID.get(index);
-  return docketInstance.noteStore.noteMap.get(uuid!) || createNote();
+  const uuid = docketProps.noteStore.indexToUUID.get(index);
+  return docketProps.noteStore.noteMap.get(uuid!) || createNote();
 };
 
 /**
@@ -193,13 +179,13 @@ const getNoteByIndex = (index: number): UserNote => {
  * @param note UserNote object to set
  */
 const setNoteByUUID = (uuid: string, note: UserNote) => {
-  if (!docketInstance.noteStore.UUIDToIndex.has(uuid)) {
+  if (!docketProps.noteStore.UUIDToIndex.has(uuid)) {
     // If the note does not exist, add it to the store
-    const index = docketInstance.noteStore.indexToUUID.size;
-    docketInstance.noteStore.indexToUUID.set(index, uuid);
-    docketInstance.noteStore.UUIDToIndex.set(uuid, index);
+    const index = docketProps.noteStore.indexToUUID.size;
+    docketProps.noteStore.indexToUUID.set(index, uuid);
+    docketProps.noteStore.UUIDToIndex.set(uuid, index);
   }
-  docketInstance.noteStore.noteMap.set(uuid, note);
+  docketProps.noteStore.noteMap.set(uuid, note);
 };
 
 /**
@@ -208,37 +194,37 @@ const setNoteByUUID = (uuid: string, note: UserNote) => {
  */
 const deleteNoteByUUID = (uuid: string) => {
   // Remove note from noteStore
-  docketInstance.noteStore.noteMap.delete(uuid);
+  docketProps.noteStore.noteMap.delete(uuid);
 
   // Delete note from indexedDB
-  docketInstance.dbConnection
+  docketProps.dbConnection
     ?.transaction("notes", "readwrite")
     .objectStore("notes")
     .delete(uuid);
 
   // Add note to deleted notes set for syncing later
-  docketInstance.noteStore.deletedNotes.add(uuid);
+  docketProps.noteStore.deletedNotes.add(uuid);
 
   // Remove note from indexToUUID and UUIDToIndex
-  const index = docketInstance.noteStore.UUIDToIndex.get(uuid);
+  const index = docketProps.noteStore.UUIDToIndex.get(uuid);
   if (index !== undefined) {
     // If there are notes after this one, decrement their indices and set the active note
     for (
       let i = index + 1;
-      i < docketInstance.noteStore.indexToUUID.size;
+      i < docketProps.noteStore.indexToUUID.size;
       i++
     ) {
-      let uuidAtIndex = docketInstance.noteStore.indexToUUID.get(i);
+      let uuidAtIndex = docketProps.noteStore.indexToUUID.get(i);
       if (uuidAtIndex) {
-        docketInstance.noteStore.UUIDToIndex.set(uuidAtIndex, i - 1);
-        docketInstance.noteStore.indexToUUID.set(i - 1, uuidAtIndex);
+        docketProps.noteStore.UUIDToIndex.set(uuidAtIndex, i - 1);
+        docketProps.noteStore.indexToUUID.set(i - 1, uuidAtIndex);
       }
     }
-    docketInstance.noteStore.UUIDToIndex.delete(uuid);
-    docketInstance.noteStore.indexToUUID.delete(
-      docketInstance.noteStore.indexToUUID.size - 1
+    docketProps.noteStore.UUIDToIndex.delete(uuid);
+    docketProps.noteStore.indexToUUID.delete(
+      docketProps.noteStore.indexToUUID.size - 1
     );
-    if (docketInstance.noteStore.noteMap.size > 0) {
+    if (docketProps.noteStore.noteMap.size > 0) {
       // Go back to home note
       setActiveNote(getNoteByIndex(0));
     } else {
@@ -257,29 +243,29 @@ const deleteNoteByUUID = (uuid: string) => {
  */
 const moveNoteToIndex = (uuid: string, targetIndex: number) => {
   // Get the previous index of the note
-  const prevIndex = docketInstance.noteStore.UUIDToIndex.get(uuid);
+  const prevIndex = docketProps.noteStore.UUIDToIndex.get(uuid);
   if (prevIndex && prevIndex < targetIndex) {
     // If moving down the list (index increases), decrement all indices between prevIndex and targetIndex
     for (let i = prevIndex + 1; i <= targetIndex; i++) {
-      let uuidAtIndex = docketInstance.noteStore.indexToUUID.get(i);
+      let uuidAtIndex = docketProps.noteStore.indexToUUID.get(i);
       if (uuidAtIndex) {
-        docketInstance.noteStore.UUIDToIndex.set(uuidAtIndex, i - 1);
-        docketInstance.noteStore.indexToUUID.set(i - 1, uuidAtIndex);
+        docketProps.noteStore.UUIDToIndex.set(uuidAtIndex, i - 1);
+        docketProps.noteStore.indexToUUID.set(i - 1, uuidAtIndex);
       }
     }
   } else if (prevIndex && prevIndex > targetIndex) {
     // If moving up the list (index decreases), increment all indices between targetIndex and prevIndex
     for (let i = prevIndex - 1; i >= targetIndex; i--) {
-      let uuidAtIndex = docketInstance.noteStore.indexToUUID.get(i);
+      let uuidAtIndex = docketProps.noteStore.indexToUUID.get(i);
       if (uuidAtIndex) {
-        docketInstance.noteStore.UUIDToIndex.set(uuidAtIndex, i + 1);
-        docketInstance.noteStore.indexToUUID.set(i + 1, uuidAtIndex);
+        docketProps.noteStore.UUIDToIndex.set(uuidAtIndex, i + 1);
+        docketProps.noteStore.indexToUUID.set(i + 1, uuidAtIndex);
       }
     }
   }
   // Update the note's index
-  docketInstance.noteStore.UUIDToIndex.set(uuid, targetIndex);
-  docketInstance.noteStore.indexToUUID.set(targetIndex, uuid);
+  docketProps.noteStore.UUIDToIndex.set(uuid, targetIndex);
+  docketProps.noteStore.indexToUUID.set(targetIndex, uuid);
   saveNoteOrder(); // Update indexedDB entry for note order
   // console.log(`Moved note ${uuid} to index ${targetIndex}`);
 };
@@ -289,7 +275,7 @@ const moveNoteToIndex = (uuid: string, targetIndex: number) => {
  * @returns `UserNote` object containing title and body of currently active note
  */
 const getActiveNote = (): UserNote | undefined => {
-  return getNoteByUUID(docketInstance.activeNoteUUID);
+  return getNoteByUUID(docketProps.activeNoteUUID);
 };
 
 /**
@@ -328,20 +314,21 @@ const renderNoteList = () => {
   // Load all saved notes to the navbar
   const noteListElement = document.getElementById("noteList");
   (<HTMLElement>noteListElement).innerHTML = "";
-  let UUIDsByIndex = [...docketInstance.noteStore.UUIDToIndex.entries()].sort(
+  let UUIDsByIndex = [...docketProps.noteStore.UUIDToIndex.entries()].sort(
     (a, b) => a[1] - b[1]
   );
   // console.log(UUIDsByIndex)
   UUIDsByIndex.forEach((uuidAndIndex, _index) => {
     // Create a new list item for each note
     let uuid = uuidAndIndex[0];
-    let note = docketInstance.noteStore.noteMap.get(uuid);
+    let note = docketProps.noteStore.noteMap.get(uuid);
     if (!note) {
       return;
     }
     let noteElement: HTMLLIElement = document.createElement("li");
     noteElement.className = "noteListItem";
     noteElement.setAttribute("data-uuid", uuid);
+    noteElement.setAttribute("tabindex", "0");
     noteElement.title = note.title + " " + uuid; // Set full title as tooltip
     noteElement.draggable = true;
 
@@ -357,14 +344,14 @@ const renderNoteList = () => {
       if (e.dataTransfer != undefined) {
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData("text/plain", note.uuid);
-        docketInstance.tempProps.draggedNote = <HTMLLIElement>e.target;
+        docketProps.tempProps.draggedNote = <HTMLLIElement>e.target;
         noteElement.classList.add("dragging");
       }
     });
     noteElement.addEventListener("dragend", () => {
-      if (docketInstance.tempProps.draggedNote) {
-        docketInstance.tempProps.draggedNote.classList.remove("dragging");
-        docketInstance.tempProps.draggedNote = null;
+      if (docketProps.tempProps.draggedNote) {
+        docketProps.tempProps.draggedNote.classList.remove("dragging");
+        docketProps.tempProps.draggedNote = null;
       }
     });
     noteElement.addEventListener("dragover", (e) => {
@@ -394,25 +381,25 @@ const renderNoteList = () => {
       if (!draggedUUID || !targetUUID) {
         return;
       }
-      const targetIndex = docketInstance.noteStore.UUIDToIndex.get(targetUUID)!;
+      const targetIndex = docketProps.noteStore.UUIDToIndex.get(targetUUID)!;
 
       // Reparent the note list
       const parentElement = (<HTMLElement>e.target).parentElement;
-      if (targetIndex === docketInstance.noteStore.noteMap.size) {
+      if (targetIndex === docketProps.noteStore.noteMap.size) {
         parentElement?.insertBefore(
-          docketInstance.tempProps.draggedNote!,
+          docketProps.tempProps.draggedNote!,
           null
         );
       } else if (
-        targetIndex > docketInstance.noteStore.UUIDToIndex.get(draggedUUID)!
+        targetIndex > docketProps.noteStore.UUIDToIndex.get(draggedUUID)!
       ) {
         parentElement?.insertBefore(
-          docketInstance.tempProps.draggedNote!,
+          docketProps.tempProps.draggedNote!,
           (<HTMLElement>e.target).nextElementSibling
         );
       } else {
         parentElement?.insertBefore(
-          docketInstance.tempProps.draggedNote!,
+          docketProps.tempProps.draggedNote!,
           <HTMLElement>e.target
         );
       }
@@ -436,7 +423,7 @@ const renderNoteList = () => {
 
 /** Save changes to the currently active note to note store and indexedDB. */
 const saveActiveNote = () => {
-  if (!docketInstance.dbConnection) {
+  if (!docketProps.dbConnection) {
     alert(
       "Error: Database connection is not initialized. Note has not been saved."
     );
@@ -444,14 +431,14 @@ const saveActiveNote = () => {
   }
   const userNote = getActiveNote();
   if (userNote) {
-    docketInstance.noteStore.noteMap.set(userNote.uuid, userNote);
+    docketProps.noteStore.noteMap.set(userNote.uuid, userNote);
     // Update the note's title and body from the editor
     userNote.title = htmlDecode(getHTMLNoteTitle());
     userNote.body = htmlDecode(getHTMLEditorText());
     userNote.lastUpdated = Date.now();
 
     // Add or update the note in indexedDB
-    const transaction = docketInstance.dbConnection.transaction(
+    const transaction = docketProps.dbConnection.transaction(
       "notes",
       "readwrite"
     );
@@ -462,31 +449,33 @@ const saveActiveNote = () => {
 
 const saveNoteOrder = () => {
   const serialized = JSON.stringify(
-    Array.from(docketInstance.noteStore.indexToUUID)
+    Array.from(docketProps.noteStore.indexToUUID)
   );
-  docketInstance.dbConnection
+  docketProps.dbConnection
     ?.transaction("noteOrder", "readwrite")
     .objectStore("noteOrder")
     .put({ index: 1, order: serialized });
 };
 
-const loadNoteOrder = () => {
-  const request = docketInstance
-    .dbConnection!.transaction("noteOrder", "readonly")
+  /**
+   * The note order is stored as a single entry in the `noteOrder` object store with key `1`.
+   * The value is a JSON string representing an array of <index, uuid> pairs.
+   * This function retrieves that entry and reconstructs the `indexToUUID` and `UUIDToIndex` maps.
+   */
+const loadIndexedDbNoteOrder = (db: IDBDatabase) => {
+  const request = db.transaction("noteOrder", "readonly")
     .objectStore("noteOrder")
     .getAll(1);
   request.onsuccess = (event) => {
     const serialized = (event.target as IDBRequest).result[0]["order"];
     const parsed = JSON.parse(serialized);
 
-    docketInstance.noteStore.indexToUUID = new Map(parsed);
-    docketInstance.noteStore.indexToUUID.forEach(
+    docketProps.noteStore.indexToUUID = new Map(parsed);
+    docketProps.noteStore.indexToUUID.forEach(
       (uuid: string, index: number) => {
-        docketInstance.noteStore.UUIDToIndex.set(uuid, index);
+        docketProps.noteStore.UUIDToIndex.set(uuid, index);
       }
     );
-
-    // console.log(docketInstance.noteStore.UUIDToIndex)
   };
 };
 
@@ -528,19 +517,19 @@ const handleInput = (lastExecuted: LastExecuted) => {
  * Save entire note store to indexedDB.
  */
 const saveNoteStore = () => {
-  if (!docketInstance.dbConnection) {
+  if (!docketProps.dbConnection) {
     alert(
       "Error: Database connection is not initialized. Note store has not been saved."
     );
     return;
   }
 
-  const transaction = docketInstance.dbConnection.transaction(
+  const transaction = docketProps.dbConnection.transaction(
     "notes",
     "readwrite"
   );
   const notesStore = transaction.objectStore("notes");
-  for (const note of docketInstance.noteStore.noteMap.values()) {
+  for (const note of docketProps.noteStore.noteMap.values()) {
     notesStore.put(note);
   }
 };
@@ -561,7 +550,7 @@ const createNote = (): UserNote => {
   setNoteByUUID(newNote.uuid, newNote);
 
   // Add new note to indexedDB
-  docketInstance.dbConnection
+  docketProps.dbConnection
     ?.transaction("notes", "readwrite")
     .objectStore("notes")
     .add(newNote);
@@ -578,19 +567,19 @@ const createNote = (): UserNote => {
  */
 const setActiveNote = (userNote: UserNote) => {
   // Set active note UUID
-  docketInstance.activeNoteUUID = userNote.uuid;
+  docketProps.activeNoteUUID = userNote.uuid;
   // Set active note in local storage
-  chrome.storage.local.set({ activeNoteUUID: docketInstance.activeNoteUUID });
+  chrome.storage.local.set({ activeNoteUUID: docketProps.activeNoteUUID });
   const noteTitleElement = <HTMLInputElement>(
     document.getElementById("noteTitle")
   );
   const noteEditorElement = <HTMLInputElement>(
     document.getElementById("markdownInput")
   );
-  noteTitleElement.value = docketInstance.noteStore.noteMap.get(
+  noteTitleElement.value = docketProps.noteStore.noteMap.get(
     userNote.uuid
   )!.title;
-  noteEditorElement.value = docketInstance.noteStore.noteMap.get(
+  noteEditorElement.value = docketProps.noteStore.noteMap.get(
     userNote.uuid
   )!.body;
   saveActiveNote();
@@ -602,7 +591,7 @@ const setActiveNote = (userNote: UserNote) => {
  */
 const deleteActiveNote = () => {
   if (confirm("Are you sure you want to delete this note?")) {
-    deleteNoteByUUID(docketInstance.activeNoteUUID);
+    deleteNoteByUUID(docketProps.activeNoteUUID);
   }
 };
 
@@ -627,7 +616,7 @@ const downloadActiveNote = () => {
  * @param theme name of theme to set
  */
 const setTheme = (theme: string) => {
-  chrome.storage.local.set(docketInstance.settings);
+  chrome.storage.local.set(docketProps.settings);
   const themedElements = document.querySelectorAll("[data-theme]");
   themedElements.forEach((element) => {
     element.setAttribute("data-theme", theme);
@@ -641,9 +630,9 @@ const toggleDarkMode = () => {
   const darkModeSlider = <HTMLInputElement>(
     document.getElementById("darkModeSlider")
   );
-  docketInstance.settings.uiTheme = darkModeSlider.checked ? "dark" : "light";
+  docketProps.settings.uiTheme = darkModeSlider.checked ? "dark" : "light";
   // console.log(`Setting theme to ${docketInstance.settings.uiTheme}`)
-  setTheme(docketInstance.settings.uiTheme);
+  setTheme(docketProps.settings.uiTheme);
 };
 
 const testCodeBackground = (): string => {
@@ -671,31 +660,15 @@ const updateCodeStyle = () => {
     oldStyleSheet.parentNode?.removeChild(oldStyleSheet);
   }
 
-  docketInstance.settings.codeStyle = (<HTMLSelectElement>(
+  docketProps.settings.codeStyle = (<HTMLSelectElement>(
     document.getElementById("codeStyleDropdown")
   )).value;
-  chrome.storage.local.set(docketInstance.settings);
+  chrome.storage.local.set(docketProps.settings);
   const codeStylesheetElement = document.createElement("link");
   codeStylesheetElement.rel = "stylesheet";
-  codeStylesheetElement.href = `code_themes/${docketInstance.settings.codeStyle}.css`;
+  codeStylesheetElement.href = `code_themes/${docketProps.settings.codeStyle}.css`;
   codeStylesheetElement.id = "codeStylesheet";
   document.head.appendChild(codeStylesheetElement);
-
-  // Set background color for code blocks
-  if (docketInstance.settings.codeStyle === "github") {
-    // Default code background for github theme, since the theme doesn't have a background color
-    (<HTMLElement>document.querySelector(":root")).style.setProperty(
-      "--primary-code-background",
-      "#eff1f3"
-    );
-  } else {
-    setTimeout(() => {
-      (<HTMLElement>document.querySelector(":root")).style.setProperty(
-        "--primary-code-background",
-        testCodeBackground()
-      );
-    }, updateTimeout);
-  }
 };
 
 /**
@@ -756,14 +729,14 @@ const initializeDocket = () => {
 
   // Load settings from local storage
   chrome.storage.local.get(null, (result) => {
-    docketInstance.settings.codeStyle = result.codeStyle || "github";
+    docketProps.settings.codeStyle = result.codeStyle || "github";
     const codeStyleDropdown = <HTMLSelectElement>(
       document.getElementById("codeStyleDropdown")
     );
-    codeStyleDropdown.value = docketInstance.settings.codeStyle;
+    codeStyleDropdown.value = docketProps.settings.codeStyle;
     updateCodeStyle();
 
-    docketInstance.settings.uiTheme = result.uiTheme || "light";
+    docketProps.settings.uiTheme = result.uiTheme || "light";
     const darkModeSlider = <HTMLInputElement>(
       document.getElementById("darkModeSlider")
     );
