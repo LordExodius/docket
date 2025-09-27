@@ -34,6 +34,12 @@
   --primary-caution-border: #d02329;
 }
 
+/* @font-face {
+  font-family: "Monaspace Neon";
+  src: url(chrome-extension://__MSG_@@extension_id__/fonts/monaspace-neon.woff2)
+    format("woff2");
+} */
+
 [data-theme="dark"] {
   --primary-background-color: #1e1e1e;
   --primary-border-color: #585858;
@@ -169,7 +175,8 @@ input[type="checkbox"] {
   background-color: var(--secondary-color);
 }
 
-#navLeft, #navRight {
+#navLeft,
+#navRight {
   display: flex;
   align-items: center;
   gap: calc(var(--primary-spacing) * 2);
@@ -210,8 +217,9 @@ input[type="checkbox"] {
   background-color: var(--primary-background-color);
   color: var(--primary-font-color);
   font-family: var(--ff-mono);
+  font-size: 0.8125rem;
   font-weight: 350;
-  line-height: 2ch;
+  line-height: 2.5ch;
   resize: none;
   border: 0;
 }
