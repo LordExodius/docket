@@ -12,11 +12,14 @@
   --primary-markdown-border: #dee3e8;
   --secondary-color: #f6f8fa;
 
+  /* Active element styles */
+  --primary-hover-color: #d4d4d4;
+  --primary-active-color: #ebebeb;
+
   /* Font colors and styles */
   --primary-link-color: #489ae3;
   --primary-font-color: black;
   --primary-code-color: black;
-  --primary-hover-color: #ebebeb;
   --weight-semibold: 600;
   --primary-spacing: 0.25rem;
 
@@ -41,6 +44,7 @@
 } */
 
 [data-theme="dark"] {
+  /* Backgrounds and borders */
   --primary-background-color: #1e1e1e;
   --primary-border-color: #585858;
   --secondary-border-color: #3f3e3e;
@@ -50,6 +54,10 @@
   --primary-inline-code-background: #2e2e2e;
   --primary-markdown-border: #585858;
   --secondary-color: #2e2e2e;
+
+  /* Active element styles */
+  --primary-hover-color: #ebebeb;
+  --primary-active-color: #3f3e3e;
 }
 
 /* Scrollbar styling */
@@ -329,7 +337,16 @@ input:checked + .slider:before {
   &.hover {
     background-color: var(--primary-hover-color);
     color: black;
-    /* box-shadow: #1e1e1e 0px 0px 0px 1px; */
+  }
+  &.active {
+    background-color: var(--primary-active-color);
+    &.hover {
+      background-color: var(--primary-hover-color);
+      color: black;
+    }
+    &.over {
+    background-color: var(--primary-link-color);
+  }
   }
 }
 
