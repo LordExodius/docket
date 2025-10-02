@@ -327,9 +327,9 @@ const renderNoteList = () => {
     }
     let noteElement: HTMLLIElement = document.createElement("li");
     noteElement.classList.add("noteListItem");
-    noteElement.setAttribute("data-uuid", uuid);
+    noteElement.id = uuid;
     noteElement.setAttribute("tabindex", "0");
-    noteElement.title = note.title + " " + uuid; // Set full title as tooltip
+    noteElement.title = note.title; // Set full title as tooltip
     noteElement.draggable = true;
 
     // Add event listeners for hover, drag, and click events
@@ -376,8 +376,7 @@ const renderNoteList = () => {
         return;
       }
       const draggedUUID = e.dataTransfer.getData("text/plain");
-      const targetUUID = (<HTMLLIElement>e.target).getAttribute("data-uuid");
-      c;
+      const targetUUID = (<HTMLLIElement>e.target).id;
       if (!draggedUUID || !targetUUID) {
         return;
       }
@@ -569,7 +568,7 @@ const createNote = (): UserNote => {
 const setActiveNote = (userNote: UserNote) => {
   // Remove styling from previous active note
   const prevActiveNote = <HTMLLIElement>(
-    document.querySelector(`[data-uuid="${docketProps.activeNoteUUID}"]`)
+    document.getElementById(docketProps.activeNoteUUID)
   );
   prevActiveNote?.classList.remove("active");
   // Set active note UUID
@@ -583,7 +582,7 @@ const setActiveNote = (userNote: UserNote) => {
     document.getElementById("markdownInput")
   );
   const noteListItem = <HTMLLIElement>(
-    document.querySelector(`[data-uuid="${docketProps.activeNoteUUID}"]`)
+    document.getElementById(docketProps.activeNoteUUID)
   );
   noteTitleElement.value = docketProps.noteStore.noteMap.get(
     userNote.uuid
