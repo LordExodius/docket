@@ -209,11 +209,7 @@ const deleteNoteByUUID = (uuid: string) => {
   const index = docketProps.noteStore.UUIDToIndex.get(uuid);
   if (index !== undefined) {
     // If there are notes after this one, decrement their indices and set the active note
-    for (
-      let i = index + 1;
-      i < docketProps.noteStore.indexToUUID.size;
-      i++
-    ) {
+    for (let i = index + 1; i < docketProps.noteStore.indexToUUID.size; i++) {
       let uuidAtIndex = docketProps.noteStore.indexToUUID.get(i);
       if (uuidAtIndex) {
         docketProps.noteStore.UUIDToIndex.set(uuidAtIndex, i - 1);
@@ -385,10 +381,7 @@ const renderNoteList = () => {
       // Reparent the note list
       const parentElement = (<HTMLElement>e.target).parentElement;
       if (targetIndex === docketProps.noteStore.noteMap.size) {
-        parentElement?.insertBefore(
-          docketProps.tempProps.draggedNote!,
-          null
-        );
+        parentElement?.insertBefore(docketProps.tempProps.draggedNote!, null);
       } else if (
         targetIndex > docketProps.noteStore.UUIDToIndex.get(draggedUUID)!
       ) {
@@ -452,13 +445,14 @@ const saveNoteOrder = () => {
     .put({ index: 1, order: serialized });
 };
 
-  /**
-   * The note order is stored as a single entry in the `noteOrder` object store with key `1`.
-   * The value is a JSON string representing an array of <index, uuid> pairs.
-   * This function retrieves that entry and reconstructs the `indexToUUID` and `UUIDToIndex` maps.
-   */
+/**
+ * The note order is stored as a single entry in the `noteOrder` object store with key `1`.
+ * The value is a JSON string representing an array of <index, uuid> pairs.
+ * This function retrieves that entry and reconstructs the `indexToUUID` and `UUIDToIndex` maps.
+ */
 const loadIndexedDbNoteOrder = (db: IDBDatabase) => {
-  const request = db.transaction("noteOrder", "readonly")
+  const request = db
+    .transaction("noteOrder", "readonly")
     .objectStore("noteOrder")
     .getAll(1);
   request.onsuccess = (event) => {
@@ -466,11 +460,9 @@ const loadIndexedDbNoteOrder = (db: IDBDatabase) => {
     const parsed = JSON.parse(serialized);
 
     docketProps.noteStore.indexToUUID = new Map(parsed);
-    docketProps.noteStore.indexToUUID.forEach(
-      (uuid: string, index: number) => {
-        docketProps.noteStore.UUIDToIndex.set(uuid, index);
-      }
-    );
+    docketProps.noteStore.indexToUUID.forEach((uuid: string, index: number) => {
+      docketProps.noteStore.UUIDToIndex.set(uuid, index);
+    });
   };
 };
 
@@ -592,7 +584,7 @@ const setActiveNote = (userNote: UserNote) => {
 
 const newNoteHandler = () => {
   setActiveNote(createNote());
-}
+};
 
 /**
  * Calls `deleteNoteByUUID` on `currentUUID` if user confirms deletion.
@@ -675,9 +667,7 @@ const toggleMarkdownInput = () => {
   const markdownInput = <HTMLInputElement>(
     document.getElementById("markdownInput")
   );
-  const editorDivider = <HTMLElement>(
-    document.getElementById("editorDivider")
-  );
+  const editorDivider = <HTMLElement>document.getElementById("editorDivider");
   if (!markdownInput.style.display || markdownInput.style.display === "block") {
     markdownInput.style.display = "none";
     editorDivider.style.display = "none";
@@ -694,9 +684,7 @@ const toggleMarkdownOutput = () => {
   const mdRenderSlider = <HTMLInputElement>(
     document.getElementById("mdRenderSlider")
   );
-  const markdownOutput = <HTMLElement>(
-    document.getElementById("markdownOutput")
-  );
+  const markdownOutput = <HTMLElement>document.getElementById("markdownOutput");
   if (!mdRenderSlider.checked) {
     markdownOutput.style.display = "none";
   } else {
@@ -709,7 +697,10 @@ const toggleMarkdownOutput = () => {
  */
 const toggleSidebar = () => {
   const sidebar = <HTMLElement>document.getElementById("sidebar");
-  if ((!sidebar.style.display && window.innerWidth < 768) || sidebar.style.display === "none") {
+  if (
+    (!sidebar.style.display && window.innerWidth < 768) ||
+    sidebar.style.display === "none"
+  ) {
     sidebar.style.display = "flex";
   } else {
     sidebar.style.display = "none";
@@ -842,12 +833,21 @@ mdTitle.addEventListener(
 markdownInput.addEventListener("keydown", (e) => {
   if (e.key === "Tab") {
     e.preventDefault();
-    markdownInput.setRangeText(
-      "\t",
-      markdownInput.selectionStart || 0,
-      markdownInput.selectionEnd || 0,
-      "end"
-    );
+    if (markdownInput.selectionStart === markdownInput.selectionEnd) {
+      markdownInput.setRangeText(
+        "\t",
+        markdownInput.selectionStart || 0,
+        markdownInput.selectionEnd || 0,
+        "end"
+      );
+    } else {
+      // markdownInput.setRangeText(
+      //   "\t" + markdownInput.value.slice(markdownInput.selectionStart || 0, markdownInput.selectionEnd || 0).replace("\n", "\n\t"),
+      //   markdownInput.selectionStart || 0,
+      //   markdownInput.selectionEnd || 0,
+      //   "preserve"
+      // );
+    }
   }
   if (e.key === "b" && e.ctrlKey) {
     if (markdownInput.selectionStart !== markdownInput.selectionEnd) {
