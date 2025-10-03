@@ -21,6 +21,9 @@
   --primary-font-color: black;
   --primary-code-color: black;
   --weight-semibold: 600;
+
+  /* Sizes and spacing */
+  --scrollbar-width: 10px;
   --primary-spacing: 0.25rem;
 
   /* Using stack overflow's font stack */
@@ -150,7 +153,8 @@ input[type="checkbox"] {
   border-right: 1px solid var(--primary-border-color);
   height: 100%;
   position: fixed;
-  & .footer {
+  & footer {
+    flex: auto;
     width: inherit;
     display: inline-block;
     justify-content: left;
@@ -160,11 +164,13 @@ input[type="checkbox"] {
 }
 
 #noteList {
-  height: 100%;
+  flex-grow: 1;
+  max-height: calc(100% - 20px);
   list-style-type: none;
   margin: 0;
   padding: 0;
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 #docketMain {
@@ -220,6 +226,7 @@ input[type="checkbox"] {
 #markdownOutput {
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
   width: auto;
   flex: 1;
   margin: calc(var(--primary-spacing) * 2);
@@ -338,7 +345,7 @@ input:checked + .slider:before {
   padding: 2px;
   margin: 0px;
   cursor: pointer;
-  width: calc(var(--sidebar-width) - 21px);
+  width: calc(var(--sidebar-width) - (var(--scrollbar-width)) - 21px);
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
