@@ -411,12 +411,7 @@ const renderNoteList = () => {
     );
 
     // Set note title and add to sidebar
-    if (note.title.length > 24) {
-      noteElement.innerHTML =
-        DOMPurify.sanitize(note.title).substring(0, 25) + "...";
-    } else {
-      noteElement.innerHTML = DOMPurify.sanitize(note.title);
-    }
+    noteElement.innerHTML = DOMPurify.sanitize(note.title);
     (<HTMLElement>noteListElement).appendChild(noteElement);
   });
 };

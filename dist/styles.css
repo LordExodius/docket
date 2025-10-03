@@ -176,6 +176,7 @@ input[type="checkbox"] {
   height: var(--navbar-height);
   border-bottom: 1px solid var(--primary-border-color);
   display: flex;
+  gap: calc(var(--primary-spacing) * 2);
   align-items: center;
   justify-content: space-between;
   padding-inline: calc(var(--primary-spacing) * 2);
@@ -190,14 +191,20 @@ input[type="checkbox"] {
   gap: calc(var(--primary-spacing) * 2);
 }
 
+#navLeft {
+  flex: auto;
+}
+
 #noteTitle {
+  flex-grow: 1;
+  max-width: 400px;
   font-family: var(--ff-mono);
   text-decoration: underline;
   text-underline-offset: 2px;
   border: none;
   background: none;
   color: var(--primary-font-color);
-  width: 100%;
+  text-overflow: ellipsis;
   &:focus {
     outline: none;
   }
@@ -324,12 +331,17 @@ input:checked + .slider:before {
 }
 
 .noteListItem {
+  display: inline-block;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
   padding: 2px;
   margin: 0px;
   cursor: pointer;
+  width: calc(var(--sidebar-width) - 21px);
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
   /* Note hover and drag */
   &.over {
     background-color: var(--primary-link-color);
