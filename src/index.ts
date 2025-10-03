@@ -327,6 +327,9 @@ const renderNoteList = () => {
     noteElement.setAttribute("tabindex", "0");
     noteElement.title = note.title; // Set full title as tooltip
     noteElement.draggable = true;
+    if (uuid === docketProps.activeNoteUUID) {
+      noteElement.classList.add("active")
+    }
 
     // Add event listeners for hover, drag, and click events
     noteElement.addEventListener("mouseover", (e) => {
