@@ -532,12 +532,12 @@ const saveNoteStore = () => {
 /**
  * Start a new note and add it to the note store and indexedDB.
  */
-const createNote = (): UserNote => {
+const createNote = (noteTemplate?: Partial<UserNote>): UserNote => {
   // Create a new note object
   const newNote: UserNote = {
     uuid: crypto.randomUUID(),
-    title: "New Note",
-    body: "",
+    title: noteTemplate?.title || "New Note",
+    body: noteTemplate?.body || "",
     lastUpdated: Date.now(),
   };
 
@@ -590,6 +590,10 @@ const setActiveNote = (userNote: UserNote) => {
   renderMarkdown();
 };
 
+const newNoteHandler = () => {
+  setActiveNote(createNote());
+}
+
 /**
  * Calls `deleteNoteByUUID` on `currentUUID` if user confirms deletion.
  */
@@ -599,6 +603,9 @@ const deleteActiveNote = () => {
   }
 };
 
+/**
+ * Download the currently active note as a markdown file.
+ */
 const downloadActiveNote = () => {
   const activeNote = getActiveNote();
   if (!activeNote) {
@@ -639,31 +646,17 @@ const toggleDarkMode = () => {
   setTheme(docketProps.settings.uiTheme);
 };
 
-const testCodeBackground = (): string => {
-  const hljsTemp = document.createElement("code");
-  hljsTemp.classList.add("hljs");
-  document.body.appendChild(hljsTemp);
-  const background = window
-    .getComputedStyle(hljsTemp)
-    .getPropertyValue("background-color");
-  document.body.removeChild(hljsTemp);
-  return background;
-};
-
 /**
- * This function matches the default code block background color to the current theme.
- *
- * If you are having issues with this not working on older systems, try increasing `updateTimeout`.
+ * Update code style based on selection from `codeStyleDropdown`.
  */
 const updateCodeStyle = () => {
-  const updateTimeout = 50;
-
   // clear old stylesheet if exists
   const oldStyleSheet = document.getElementById("codeStylesheet");
   if (oldStyleSheet) {
     oldStyleSheet.parentNode?.removeChild(oldStyleSheet);
   }
 
+  // set new stylesheet
   docketProps.settings.codeStyle = (<HTMLSelectElement>(
     document.getElementById("codeStyleDropdown")
   )).value;
@@ -795,7 +788,7 @@ deleteNoteButton.addEventListener("click", deleteActiveNote);
 const newNoteButton = <HTMLButtonElement>(
   document.getElementById("newNoteButton")
 );
-newNoteButton.addEventListener("click", createNote);
+newNoteButton.addEventListener("click", newNoteHandler);
 
 // DOWNLOAD NOTE EVENT LISTENER
 const downloadNoteButton = <HTMLButtonElement>(
