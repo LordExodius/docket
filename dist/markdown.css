@@ -108,6 +108,17 @@ ol {
   padding-inline-start: calc(var(--primary-spacing) * 8);
 }
 
+/* GFM tasklist */
+li {
+  &:has(> input) {
+    list-style: none;
+  }
+}
+
+input[type="checkbox"] {
+  margin: 0 .2em .25em -1.4em;
+}
+
 a {
   cursor: pointer;
   &:link {
