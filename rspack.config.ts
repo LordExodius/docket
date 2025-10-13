@@ -33,14 +33,21 @@ module.exports = {
   },
   plugins: [
     new LicenseWebpackPlugin({
-      stats: {
-        warnings: true,
-        errors: true,
-      },
+      outputFilename: "dependency.licenses.txt",
       handleMissingLicenseText: (packageName: string, licenseType: string) => {
         console.log("Cannot find license for " + packageName);
         return "UNKNOWN";
       },
+      additionalModules: [
+        {
+          name: "dompurify",
+          directory: path.join(__dirname, "node_modules", "dompurify"),
+        },
+        {
+          name: "marked",
+          directory: path.join(__dirname, "node_modules", "marked"),
+        },
+      ],
     }),
   ],
 };
