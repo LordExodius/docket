@@ -695,6 +695,16 @@ const toggleMarkdownOutput = () => {
   }
 };
 
+const openSidebar = () => {
+  const sidebar = <HTMLElement>document.getElementById("sidebar");
+  sidebar.style.display = "flex";
+};
+
+const closeSidebar = () => {
+  const sidebar = <HTMLElement>document.getElementById("sidebar");
+  sidebar.style.display = "none";
+}
+
 /**
  * Toggle sidebar display on or off.
  */
@@ -704,11 +714,22 @@ const toggleSidebar = () => {
     (!sidebar.style.display && window.innerWidth < 768) ||
     sidebar.style.display === "none"
   ) {
-    sidebar.style.display = "flex";
+    openSidebar();
   } else {
-    sidebar.style.display = "none";
+    closeSidebar();
   }
 };
+
+// Media query listener for sidebar
+const sidebarMediaQuery = window.matchMedia("(width > 48rem)");
+sidebarMediaQuery.addEventListener("change", (e) => {
+  if (e.matches) {
+    openSidebar();
+  }
+  else {
+    closeSidebar();
+  }
+});
 
 /**
  * Run all initialization functions to set up the Docket application.
@@ -745,9 +766,16 @@ const initializeDocket = () => {
 
 window.addEventListener("load", initializeDocket);
 
-window.addEventListener("resize", toggleMarkdownOutput);
+// SIDEBAR TOGGLE EVENT LISTENERS
+const sidebarToggleButton = <HTMLButtonElement>(
+  document.getElementById("sidebarToggleButton")
+);
+sidebarToggleButton.addEventListener("click", toggleSidebar);
+const insetSidebarToggleButton = <HTMLButtonElement>(
+  document.getElementById("sidebarToggleButtonInset")
+);
+insetSidebarToggleButton.addEventListener("click", toggleSidebar);
 
-// SIDEBAR TOGGLE EVENT LISTENER
 window.addEventListener("keydown", (e) => {
   if (e.key === "h" && e.ctrlKey) {
     e.preventDefault();
@@ -767,6 +795,7 @@ const darkModeSlider = <HTMLInputElement>(
 );
 darkModeSlider.addEventListener("change", toggleDarkMode);
 
+// MARKDOWN RENDER TOGGLE EVENT LISTENER
 const mdRenderSlider = <HTMLInputElement>(
   document.getElementById("mdRenderSlider")
 );

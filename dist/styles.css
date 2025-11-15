@@ -163,6 +163,20 @@ input[type="checkbox"] {
   }
 }
 
+#appTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-end: calc(var(--primary-spacing) * 2);
+  & h6 {
+    margin: 0;
+  }
+}
+
+#sidebarToggleButtonInset {
+  display: flex;
+}
+
 #noteList {
   flex-grow: 1;
   max-height: calc(100% - 20px);
@@ -375,7 +389,7 @@ input:checked + .slider:before {
   justify-content: space-between;
 }
 
-@media (width >= 48rem) {
+@media (width > 48rem) {
   .adaptiveDivider {
     margin-block: calc(var(--primary-spacing) * 2);
     margin-inline: 0;
@@ -384,6 +398,10 @@ input:checked + .slider:before {
   #sidebar {
     display: flex;
     position: relative;
+  }
+
+  #sidebarToggleButtonInset {
+    display: none;
   }
 
   #editor {
