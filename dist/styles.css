@@ -50,7 +50,7 @@
   /* Backgrounds and borders */
   --primary-background-color: #1e1e1e;
   --primary-border-color: #585858;
-  --secondary-border-color: #3f3e3e;
+  --secondary-border-color: #585858;
   --primary-font-color: #cccccc;
   --primary-code-color: #cccccc;
   --primary-code-background: #2e2e2e;
@@ -213,6 +213,43 @@ input[type="checkbox"] {
 
 #navLeft {
   flex: auto;
+}
+
+#viewSettings {
+  display: flex;
+  align-items: center;
+  vertical-align: middle;
+  justify-content: space-between;
+  gap: var(--primary-spacing);
+}
+.viewSettingRadio {
+  display: none;
+  &:checked {
+    + .viewSettingLabel { /* style label (icon) when radio is checked */
+      background-color: var(--primary-hover-color);
+      color: black;
+    }
+  }
+}
+.viewSettingLabel {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+  background-color: var(--primary-active-color);
+  color: var(--primary-font-color);
+  flex-grow: 1;
+  justify-content: center;
+  &:hover {
+    background-color: var(--primary-hover-color);
+    color: black;
+  }
+  & svg.icon {
+    padding: 4px;
+  }
+}
+.icon {
+  display: block;
 }
 
 #noteTitle {
@@ -387,6 +424,7 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-block-end: calc(var(--primary-spacing) * 2);
 }
 
 @media (width > 48rem) {

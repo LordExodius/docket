@@ -38,11 +38,33 @@
           <span class="slider"></span>
         </label>
       </div>
-      <div id="mdRenderSetting" class="settingToggle">
-        <span>MD Preview</span>
-        <label class="switch">
-          <input id="mdRenderSlider" type="checkbox" checked>
-          <span class="slider"></span>
+      <div id="viewSettings">
+        <input type="radio" class="viewSettingRadio" id="leftPane" name="viewSetting" value="left"
+          title="Only Show Editor">
+        <label for="leftPane" class="viewSettingLabel">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M2 5C2 3.34315 3.34315 2 5 2H19C20.6569 2 22 3.34315 22 5V19C22 20.6569 20.6569 22 19 22H5C3.34315 22 2 20.6569 2 19V5ZM4 13V19C4 19.5523 4.44772 20 5 20H15V4H5C4.44772 4 4 4.44772 4 5V11H8.58579L7.29289 9.70711C6.90237 9.31658 6.90237 8.68342 7.29289 8.29289C7.68342 7.90237 8.31658 7.90237 8.70711 8.29289L11.7071 11.2929C12.0976 11.6834 12.0976 12.3166 11.7071 12.7071L8.70711 15.7071C8.31658 16.0976 7.68342 16.0976 7.29289 15.7071C6.90237 15.3166 6.90237 14.6834 7.29289 14.2929L8.58579 13H4ZM17 4V20H19C19.5523 20 20 19.5523 20 19V5C20 4.44772 19.5523 4 19 4H17Z"
+              fill="currentColor" />
+          </svg>
+        </label>
+        <input type="radio" class="viewSettingRadio" id="centerPane" name="viewSetting" value="center"
+          title="Show Both Panes" checked>
+        <label for="centerPane" class="viewSettingLabel">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M2 5C2 3.34315 3.34315 2 5 2H19C20.6569 2 22 3.34315 22 5V19C22 20.6569 20.6569 22 19 22H5C3.34315 22 2 20.6569 2 19V5ZM13 20H19C19.5523 20 20 19.5523 20 19V5C20 4.44772 19.5523 4 19 4H13V20ZM11 4V20H5C4.44772 20 4 19.5523 4 19V5C4 4.44772 4.44772 4 5 4H11Z"
+              fill="currentColor" />
+          </svg>
+        </label>
+        <input type="radio" class="viewSettingRadio" id="rightPane" name="viewSetting" value="right"
+          title="Only Show Preview">
+        <label for="rightPane" class="viewSettingLabel">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M2 5C2 3.34315 3.34315 2 5 2H19C20.6569 2 22 3.34315 22 5V19C22 20.6569 20.6569 22 19 22H5C3.34315 22 2 20.6569 2 19V5ZM9 20H19C19.5523 20 20 19.5523 20 19V13H15.4142L16.7071 14.2929C17.0976 14.6834 17.0976 15.3166 16.7071 15.7071C16.3166 16.0976 15.6834 16.0976 15.2929 15.7071L12.2929 12.7071C11.9024 12.3166 11.9024 11.6834 12.2929 11.2929L15.2929 8.29289C15.6834 7.90237 16.3166 7.90237 16.7071 8.29289C17.0976 8.68342 17.0976 9.31658 16.7071 9.70711L15.4142 11H20V5C20 4.44772 19.5523 4 19 4H9V20ZM7 4V20H5C4.44772 20 4 19.5523 4 19V5C4 4.44772 4.44772 4 5 4H7Z"
+              fill="currentColor" />
+          </svg>
         </label>
       </div>
     </div>
@@ -54,7 +76,6 @@
         <input type="text" id="noteTitle">
       </div>
       <div id="navRight">
-        <button id="readerModeButton" title="Reader Mode">👁️</button>
         <div class="verticalDivider"></div>
         <button id="downloadNoteButton" title="Download Note">⬇️</button>
       </div>
