@@ -219,6 +219,7 @@ input[type="checkbox"] {
   display: flex;
   align-items: center;
   vertical-align: middle;
+  justify-content: space-between;
   gap: var(--primary-spacing);
 }
 .viewSettingRadio {
@@ -235,8 +236,10 @@ input[type="checkbox"] {
   align-items: center;
   cursor: pointer;
   border-radius: 4px;
-  background-color: var(--secondary-color);
+  background-color: var(--primary-active-color);
   color: var(--primary-font-color);
+  flex-grow: 1;
+  justify-content: center;
   &:hover {
     background-color: var(--primary-hover-color);
     color: black;
@@ -421,6 +424,7 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-block-end: calc(var(--primary-spacing) * 2);
 }
 
 @media (width > 48rem) {
