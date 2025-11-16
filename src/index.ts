@@ -53,6 +53,8 @@ let docketProps = {
   },
   tempProps: {
     draggedNote: null as HTMLLIElement | null,
+    viewMode: "center" as "editor" | "center" | "reader",
+    popupMode: false,
   },
   activeNoteUUID: "",
   noteStore: {
@@ -131,10 +133,7 @@ const initDbConnection = async () => {
     loadIndexedDbNotes(docketProps.dbConnection);
   };
   request.onerror = (event) => {
-    console.error(
-      "Error opening indexedDB:",
-      (event.target as IDBOpenDBRequest).error
-    );
+    console.error("Error opening indexedDB:", (event.target as IDBOpenDBRequest).error);
   };
 };
 
@@ -142,18 +141,14 @@ const initDbConnection = async () => {
  * Get editor text from HTML element
  **/
 const getHTMLEditorText = () => {
-  return (
-    (<HTMLInputElement>document.getElementById("markdownInput")).value || ""
-  );
+  return (<HTMLInputElement>document.getElementById("markdownInput")).value || "";
 };
 
 /**
  * Get note title from the HTML element
  **/
 const getHTMLNoteTitle = () => {
-  return (
-    (<HTMLInputElement>document.getElementById("noteTitle")).value || "unnamed"
-  );
+  return (<HTMLInputElement>document.getElementById("noteTitle")).value || "unnamed";
 };
 
 /**
@@ -197,10 +192,7 @@ const deleteNoteByUUID = (uuid: string) => {
   docketProps.noteStore.noteMap.delete(uuid);
 
   // Delete note from indexedDB
-  docketProps.dbConnection
-    ?.transaction("notes", "readwrite")
-    .objectStore("notes")
-    .delete(uuid);
+  docketProps.dbConnection?.transaction("notes", "readwrite").objectStore("notes").delete(uuid);
 
   // Add note to deleted notes set for syncing later
   docketProps.noteStore.deletedNotes.add(uuid);
@@ -217,9 +209,7 @@ const deleteNoteByUUID = (uuid: string) => {
       }
     }
     docketProps.noteStore.UUIDToIndex.delete(uuid);
-    docketProps.noteStore.indexToUUID.delete(
-      docketProps.noteStore.indexToUUID.size - 1
-    );
+    docketProps.noteStore.indexToUUID.delete(docketProps.noteStore.indexToUUID.size - 1);
     if (docketProps.noteStore.noteMap.size > 0) {
       // Go back to home note
       setActiveNote(getNoteByIndex(0));
@@ -278,16 +268,14 @@ const getActiveNote = (): UserNote | undefined => {
  * Render markdown from the editor to preview panel.
  */
 const renderMarkdown = () => {
-  const mdRenderPanel = <HTMLElement>document.getElementById("markdownOutput");
-  if (mdRenderPanel.style.display === "none") {
+  const markdownOutput = <HTMLElement>document.getElementById("markdownOutput");
+  if (markdownOutput.style.display === "none") {
     return;
   } // Prevent rendering when editor is minimized
 
   // Parse markdown and sanitize HTML output
   const editorText = getHTMLEditorText();
-  mdRenderPanel.innerHTML = DOMPurify.sanitize(
-    marked.parse(editorText) as keyof typeof String
-  );
+  markdownOutput.innerHTML = DOMPurify.sanitize(marked.parse(editorText) as keyof typeof String);
 };
 
 /**
@@ -310,9 +298,7 @@ const renderNoteList = () => {
   // Load all saved notes to the navbar
   const noteListElement = document.getElementById("noteList");
   (<HTMLElement>noteListElement).innerHTML = "";
-  let UUIDsByIndex = [...docketProps.noteStore.UUIDToIndex.entries()].sort(
-    (a, b) => a[1] - b[1]
-  );
+  let UUIDsByIndex = [...docketProps.noteStore.UUIDToIndex.entries()].sort((a, b) => a[1] - b[1]);
   // console.log(UUIDsByIndex)
   UUIDsByIndex.forEach((uuidAndIndex, _index) => {
     // Create a new list item for each note
@@ -328,7 +314,7 @@ const renderNoteList = () => {
     noteElement.title = note.title; // Set full title as tooltip
     noteElement.draggable = true;
     if (uuid === docketProps.activeNoteUUID) {
-      noteElement.classList.add("active")
+      noteElement.classList.add("active");
     }
 
     // Add event listeners for hover, drag, and click events
@@ -385,26 +371,15 @@ const renderNoteList = () => {
       const parentElement = (<HTMLElement>e.target).parentElement;
       if (targetIndex === docketProps.noteStore.noteMap.size) {
         parentElement?.insertBefore(docketProps.tempProps.draggedNote!, null);
-      } else if (
-        targetIndex > docketProps.noteStore.UUIDToIndex.get(draggedUUID)!
-      ) {
-        parentElement?.insertBefore(
-          docketProps.tempProps.draggedNote!,
-          (<HTMLElement>e.target).nextElementSibling
-        );
+      } else if (targetIndex > docketProps.noteStore.UUIDToIndex.get(draggedUUID)!) {
+        parentElement?.insertBefore(docketProps.tempProps.draggedNote!, (<HTMLElement>e.target).nextElementSibling);
       } else {
-        parentElement?.insertBefore(
-          docketProps.tempProps.draggedNote!,
-          <HTMLElement>e.target
-        );
+        parentElement?.insertBefore(docketProps.tempProps.draggedNote!, <HTMLElement>e.target);
       }
       // Update note order in note store
       moveNoteToIndex(draggedUUID, targetIndex!);
     });
-    noteElement.addEventListener(
-      "click",
-      noteClickHandler.bind(null, note.uuid)
-    );
+    noteElement.addEventListener("click", noteClickHandler.bind(null, note.uuid));
 
     // Set note title and add to sidebar
     noteElement.innerHTML = DOMPurify.sanitize(note.title);
@@ -415,9 +390,7 @@ const renderNoteList = () => {
 /** Save changes to the currently active note to note store and indexedDB. */
 const saveActiveNote = () => {
   if (!docketProps.dbConnection) {
-    alert(
-      "Error: Database connection is not initialized. Note has not been saved."
-    );
+    alert("Error: Database connection is not initialized. Note has not been saved.");
     return;
   }
   const userNote = getActiveNote();
@@ -429,23 +402,15 @@ const saveActiveNote = () => {
     userNote.lastUpdated = Date.now();
 
     // Add or update the note in indexedDB
-    const transaction = docketProps.dbConnection.transaction(
-      "notes",
-      "readwrite"
-    );
+    const transaction = docketProps.dbConnection.transaction("notes", "readwrite");
     const notesStore = transaction.objectStore("notes");
     notesStore.put(userNote);
   }
 };
 
 const saveNoteOrder = () => {
-  const serialized = JSON.stringify(
-    Array.from(docketProps.noteStore.indexToUUID)
-  );
-  docketProps.dbConnection
-    ?.transaction("noteOrder", "readwrite")
-    .objectStore("noteOrder")
-    .put({ index: 1, order: serialized });
+  const serialized = JSON.stringify(Array.from(docketProps.noteStore.indexToUUID));
+  docketProps.dbConnection?.transaction("noteOrder", "readwrite").objectStore("noteOrder").put({ index: 1, order: serialized });
 };
 
 /**
@@ -454,10 +419,7 @@ const saveNoteOrder = () => {
  * This function retrieves that entry and reconstructs the `indexToUUID` and `UUIDToIndex` maps.
  */
 const loadIndexedDbNoteOrder = (db: IDBDatabase) => {
-  const request = db
-    .transaction("noteOrder", "readonly")
-    .objectStore("noteOrder")
-    .getAll(1);
+  const request = db.transaction("noteOrder", "readonly").objectStore("noteOrder").getAll(1);
   request.onsuccess = (event) => {
     const serialized = (event.target as IDBRequest).result[0]["order"];
     const parsed = JSON.parse(serialized);
@@ -508,16 +470,11 @@ const handleInput = (lastExecuted: LastExecuted) => {
  */
 const saveNoteStore = () => {
   if (!docketProps.dbConnection) {
-    alert(
-      "Error: Database connection is not initialized. Note store has not been saved."
-    );
+    alert("Error: Database connection is not initialized. Note store has not been saved.");
     return;
   }
 
-  const transaction = docketProps.dbConnection.transaction(
-    "notes",
-    "readwrite"
-  );
+  const transaction = docketProps.dbConnection.transaction("notes", "readwrite");
   const notesStore = transaction.objectStore("notes");
   for (const note of docketProps.noteStore.noteMap.values()) {
     notesStore.put(note);
@@ -540,10 +497,7 @@ const createNote = (noteTemplate?: Partial<UserNote>): UserNote => {
   setNoteByUUID(newNote.uuid, newNote);
 
   // Add new note to indexedDB
-  docketProps.dbConnection
-    ?.transaction("notes", "readwrite")
-    .objectStore("notes")
-    .add(newNote);
+  docketProps.dbConnection?.transaction("notes", "readwrite").objectStore("notes").add(newNote);
 
   // Render the updated note list
   renderNoteList();
@@ -557,29 +511,17 @@ const createNote = (noteTemplate?: Partial<UserNote>): UserNote => {
  */
 const setActiveNote = (userNote: UserNote) => {
   // Remove styling from previous active note
-  const prevActiveNote = <HTMLLIElement>(
-    document.getElementById(docketProps.activeNoteUUID)
-  );
+  const prevActiveNote = <HTMLLIElement>document.getElementById(docketProps.activeNoteUUID);
   prevActiveNote?.classList.remove("active");
   // Set active note UUID
   docketProps.activeNoteUUID = userNote.uuid;
   // Set active note in local storage
   chrome.storage.local.set({ activeNoteUUID: docketProps.activeNoteUUID });
-  const noteTitleElement = <HTMLInputElement>(
-    document.getElementById("noteTitle")
-  );
-  const noteEditorElement = <HTMLInputElement>(
-    document.getElementById("markdownInput")
-  );
-  const noteListItem = <HTMLLIElement>(
-    document.getElementById(docketProps.activeNoteUUID)
-  );
-  noteTitleElement.value = docketProps.noteStore.noteMap.get(
-    userNote.uuid
-  )!.title;
-  noteEditorElement.value = docketProps.noteStore.noteMap.get(
-    userNote.uuid
-  )!.body;
+  const noteTitleElement = <HTMLInputElement>document.getElementById("noteTitle");
+  const noteEditorElement = <HTMLInputElement>document.getElementById("markdownInput");
+  const noteListItem = <HTMLLIElement>document.getElementById(docketProps.activeNoteUUID);
+  noteTitleElement.value = docketProps.noteStore.noteMap.get(userNote.uuid)!.title;
+  noteEditorElement.value = docketProps.noteStore.noteMap.get(userNote.uuid)!.body;
   noteListItem?.classList.add("active");
   saveActiveNote();
   renderMarkdown();
@@ -633,9 +575,7 @@ const setTheme = (theme: string) => {
  * Toggle dark mode on or off depending on the state of the `darkModeSlider` checkbox.
  */
 const toggleDarkMode = () => {
-  const darkModeSlider = <HTMLInputElement>(
-    document.getElementById("darkModeSlider")
-  );
+  const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider");
   docketProps.settings.uiTheme = darkModeSlider.checked ? "dark" : "light";
   // console.log(`Setting theme to ${docketInstance.settings.uiTheme}`)
   setTheme(docketProps.settings.uiTheme);
@@ -652,9 +592,7 @@ const updateCodeStyle = () => {
   }
 
   // set new stylesheet
-  docketProps.settings.codeStyle = (<HTMLSelectElement>(
-    document.getElementById("codeStyleDropdown")
-  )).value;
+  docketProps.settings.codeStyle = (<HTMLSelectElement>document.getElementById("codeStyleDropdown")).value;
   chrome.storage.local.set(docketProps.settings);
   const codeStylesheetElement = document.createElement("link");
   codeStylesheetElement.rel = "stylesheet";
@@ -663,57 +601,68 @@ const updateCodeStyle = () => {
   document.head.appendChild(codeStylesheetElement);
 };
 
-/**
- * Toggle markdown input display on or off.
- */
-const toggleMarkdownInput = () => {
-  const markdownInput = <HTMLInputElement>(
-    document.getElementById("markdownInput")
-  );
+/** Open the markdown input panel. */
+const openMarkdownInput = () => {
+  const markdownInput = <HTMLInputElement>document.getElementById("markdownInput");
   const editorDivider = <HTMLElement>document.getElementById("editorDivider");
-  if (!markdownInput.style.display || markdownInput.style.display === "block") {
-    markdownInput.style.display = "none";
-    editorDivider.style.display = "none";
-  } else {
-    markdownInput.style.display = "block";
-    editorDivider.style.display = "block";
-  }
+  markdownInput.style.display = "block";
+  editorDivider.style.display = "block";
+};
+/** Close the markdown input panel. */
+const closeMarkdownInput = () => {
+  const markdownInput = <HTMLInputElement>document.getElementById("markdownInput");
+  const editorDivider = <HTMLElement>document.getElementById("editorDivider");
+  markdownInput.style.display = "none";
+  editorDivider.style.display = "none";
 };
 
-/**
- * Toggle markdown renderer display based on editor width or value of `mdRenderToggle` checkbox.
- */
-const toggleMarkdownOutput = () => {
-  const mdRenderSlider = <HTMLInputElement>(
-    document.getElementById("mdRenderSlider")
-  );
+/** Open the markdown output panel. */
+const openMarkdownOutput = () => {
   const markdownOutput = <HTMLElement>document.getElementById("markdownOutput");
-  if (!mdRenderSlider.checked) {
-    markdownOutput.style.display = "none";
-  } else {
-    markdownOutput.style.display = "block";
-  }
+  markdownOutput.style.display = "block";
+};
+/** Close the markdown output panel. */
+const closeMarkdownOutput = () => {
+  const markdownOutput = <HTMLElement>document.getElementById("markdownOutput");
+  markdownOutput.style.display = "none";
+};
+
+const editorMode = () => {
+  docketProps.tempProps.viewMode = "editor";
+  leftPaneRadio.checked = true;
+  closeMarkdownOutput();
+  openMarkdownInput();
+};
+
+const centerMode = () => {
+  docketProps.tempProps.viewMode = "center";
+  centerPaneRadio.checked = true;
+  openMarkdownInput();
+  openMarkdownOutput();
+};
+
+const readerMode = () => {
+  docketProps.tempProps.viewMode = "reader";
+  rightPaneRadio.checked = true;
+  openMarkdownOutput();
+  closeMarkdownInput();
 };
 
 const openSidebar = () => {
   const sidebar = <HTMLElement>document.getElementById("sidebar");
   sidebar.style.display = "flex";
 };
-
 const closeSidebar = () => {
   const sidebar = <HTMLElement>document.getElementById("sidebar");
   sidebar.style.display = "none";
-}
+};
 
 /**
  * Toggle sidebar display on or off.
  */
 const toggleSidebar = () => {
   const sidebar = <HTMLElement>document.getElementById("sidebar");
-  if (
-    (!sidebar.style.display && window.innerWidth < 768) ||
-    sidebar.style.display === "none"
-  ) {
+  if ((!sidebar.style.display && window.innerWidth < 768) || sidebar.style.display === "none") {
     openSidebar();
   } else {
     closeSidebar();
@@ -725,8 +674,7 @@ const sidebarMediaQuery = window.matchMedia("(width > 48rem)");
 sidebarMediaQuery.addEventListener("change", (e) => {
   if (e.matches) {
     openSidebar();
-  }
-  else {
+  } else {
     closeSidebar();
   }
 });
@@ -742,38 +690,31 @@ const initializeDocket = () => {
   // Load settings from local storage
   chrome.storage.local.get(null, (result) => {
     docketProps.settings.codeStyle = result.codeStyle || "github";
-    const codeStyleDropdown = <HTMLSelectElement>(
-      document.getElementById("codeStyleDropdown")
-    );
+    const codeStyleDropdown = <HTMLSelectElement>document.getElementById("codeStyleDropdown");
     codeStyleDropdown.value = docketProps.settings.codeStyle;
     updateCodeStyle();
 
     docketProps.settings.uiTheme = result.uiTheme || "light";
-    const darkModeSlider = <HTMLInputElement>(
-      document.getElementById("darkModeSlider")
-    );
+    const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider");
     darkModeSlider.checked = result.uiTheme === "dark";
     toggleDarkMode();
   });
 
-  // Configure popup specific elements
-  const bodyElement = <HTMLElement>document.body;
-  if (bodyElement.classList.contains("popup")) {
+  // Configure popup specific settings
+  docketProps.tempProps.popupMode = window.location.search.includes("popup=true");
+  if (docketProps.tempProps.popupMode) {
     // Display notes in reader mode by default
-    toggleMarkdownInput();
+    document.getElementById("docketBody")?.classList.add("popup");
+    readerMode();
   }
 };
 
 window.addEventListener("load", initializeDocket);
 
 // SIDEBAR TOGGLE EVENT LISTENERS
-const sidebarToggleButton = <HTMLButtonElement>(
-  document.getElementById("sidebarToggleButton")
-);
+const sidebarToggleButton = <HTMLButtonElement>document.getElementById("sidebarToggleButton");
 sidebarToggleButton.addEventListener("click", toggleSidebar);
-const insetSidebarToggleButton = <HTMLButtonElement>(
-  document.getElementById("sidebarToggleButtonInset")
-);
+const insetSidebarToggleButton = <HTMLButtonElement>document.getElementById("sidebarToggleButtonInset");
 insetSidebarToggleButton.addEventListener("click", toggleSidebar);
 
 window.addEventListener("keydown", (e) => {
@@ -784,51 +725,49 @@ window.addEventListener("keydown", (e) => {
 });
 
 // CODESTYLE EVENT LISTENER
-const codeStyleDropdown = <HTMLSelectElement>(
-  document.getElementById("codeStyleDropdown")
-);
+const codeStyleDropdown = <HTMLSelectElement>document.getElementById("codeStyleDropdown");
 codeStyleDropdown.addEventListener("change", updateCodeStyle);
 
 // DARKMODE EVENT LISTENER
-const darkModeSlider = <HTMLInputElement>(
-  document.getElementById("darkModeSlider")
-);
+const darkModeSlider = <HTMLInputElement>document.getElementById("darkModeSlider");
 darkModeSlider.addEventListener("change", toggleDarkMode);
 
-// MARKDOWN RENDER TOGGLE EVENT LISTENER
-const mdRenderSlider = <HTMLInputElement>(
-  document.getElementById("mdRenderSlider")
-);
-mdRenderSlider.addEventListener("change", toggleMarkdownOutput);
+/*
+ * View setting event listeners
+ **/
+const leftPaneRadio = <HTMLInputElement>document.getElementById("leftPane");
+const centerPaneRadio = <HTMLInputElement>document.getElementById("centerPane");
+const rightPaneRadio = <HTMLInputElement>document.getElementById("rightPane");
+leftPaneRadio.addEventListener("change", () => {
+  if (leftPaneRadio.checked) {
+    editorMode();
+  }
+});
+centerPaneRadio.addEventListener("change", () => {
+  if (centerPaneRadio.checked) {
+    centerMode();
+  }
+});
+rightPaneRadio.addEventListener("change", () => {
+  if (rightPaneRadio.checked) {
+    readerMode();
+  }
+});
 
 // DELETE NOTE EVENT LISTENER
-const deleteNoteButton = <HTMLButtonElement>(
-  document.getElementById("deleteNoteButton")
-);
+const deleteNoteButton = <HTMLButtonElement>document.getElementById("deleteNoteButton");
 deleteNoteButton.addEventListener("click", deleteActiveNote);
 
 // NEWNOTE EVENT LISTENER
-const newNoteButton = <HTMLButtonElement>(
-  document.getElementById("newNoteButton")
-);
+const newNoteButton = <HTMLButtonElement>document.getElementById("newNoteButton");
 newNoteButton.addEventListener("click", newNoteHandler);
 
 // DOWNLOAD NOTE EVENT LISTENER
-const downloadNoteButton = <HTMLButtonElement>(
-  document.getElementById("downloadNoteButton")
-);
+const downloadNoteButton = <HTMLButtonElement>document.getElementById("downloadNoteButton");
 downloadNoteButton.addEventListener("click", downloadActiveNote);
 
-// TOGGLE MARKDOWN INPUT EVENT LISTENER
-const toggleMarkdownInputButton = <HTMLButtonElement>(
-  document.getElementById("readerModeButton")
-);
-toggleMarkdownInputButton.addEventListener("click", toggleMarkdownInput);
-
 // EDITOR EVENT LISTENERS
-const markdownInput = <HTMLInputElement>(
-  document.getElementById("markdownInput")
-);
+const markdownInput = <HTMLInputElement>document.getElementById("markdownInput");
 const mdTitle = <HTMLElement>document.getElementById("noteTitle");
 
 /**
@@ -866,12 +805,7 @@ markdownInput.addEventListener("keydown", (e) => {
   if (e.key === "Tab") {
     e.preventDefault();
     if (markdownInput.selectionStart === markdownInput.selectionEnd) {
-      markdownInput.setRangeText(
-        "\t",
-        markdownInput.selectionStart || 0,
-        markdownInput.selectionEnd || 0,
-        "end"
-      );
+      markdownInput.setRangeText("\t", markdownInput.selectionStart || 0, markdownInput.selectionEnd || 0, "end");
     } else {
       // markdownInput.setRangeText(
       //   "\t" + markdownInput.value.slice(markdownInput.selectionStart || 0, markdownInput.selectionEnd || 0).replace("\n", "\n\t"),
@@ -885,12 +819,7 @@ markdownInput.addEventListener("keydown", (e) => {
     if (markdownInput.selectionStart !== markdownInput.selectionEnd) {
       e.preventDefault();
       markdownInput.setRangeText(
-        "**" +
-          markdownInput.value.substring(
-            markdownInput.selectionStart || 0,
-            markdownInput.selectionEnd || 0
-          ) +
-          "**",
+        "**" + markdownInput.value.substring(markdownInput.selectionStart || 0, markdownInput.selectionEnd || 0) + "**",
         markdownInput.selectionStart || 0,
         markdownInput.selectionEnd || 0,
         "select"
@@ -901,12 +830,7 @@ markdownInput.addEventListener("keydown", (e) => {
     if (markdownInput.selectionStart !== markdownInput.selectionEnd) {
       e.preventDefault();
       markdownInput.setRangeText(
-        "*" +
-          markdownInput.value.substring(
-            markdownInput.selectionStart || 0,
-            markdownInput.selectionEnd || 0
-          ) +
-          "*",
+        "*" + markdownInput.value.substring(markdownInput.selectionStart || 0, markdownInput.selectionEnd || 0) + "*",
         markdownInput.selectionStart || 0,
         markdownInput.selectionEnd || 0,
         "select"
@@ -917,12 +841,7 @@ markdownInput.addEventListener("keydown", (e) => {
     if (markdownInput.selectionStart !== markdownInput.selectionEnd) {
       e.preventDefault();
       markdownInput.setRangeText(
-        "~~" +
-          markdownInput.value.substring(
-            markdownInput.selectionStart || 0,
-            markdownInput.selectionEnd || 0
-          ) +
-          "~~",
+        "~~" + markdownInput.value.substring(markdownInput.selectionStart || 0, markdownInput.selectionEnd || 0) + "~~",
         markdownInput.selectionStart || 0,
         markdownInput.selectionEnd || 0,
         "select"
@@ -933,12 +852,7 @@ markdownInput.addEventListener("keydown", (e) => {
     if (markdownInput.selectionStart !== markdownInput.selectionEnd) {
       e.preventDefault();
       markdownInput.setRangeText(
-        "`" +
-          markdownInput.value.substring(
-            markdownInput.selectionStart || 0,
-            markdownInput.selectionEnd || 0
-          ) +
-          "`",
+        "`" + markdownInput.value.substring(markdownInput.selectionStart || 0, markdownInput.selectionEnd || 0) + "`",
         markdownInput.selectionStart || 0,
         markdownInput.selectionEnd || 0,
         "select"
@@ -948,12 +862,7 @@ markdownInput.addEventListener("keydown", (e) => {
   if (e.key === "l" && e.ctrlKey) {
     e.preventDefault();
     markdownInput.setRangeText(
-      "[" +
-        markdownInput.value.substring(
-          markdownInput.selectionStart || 0,
-          markdownInput.selectionEnd || 0
-        ) +
-        "](url)",
+      "[" + markdownInput.value.substring(markdownInput.selectionStart || 0, markdownInput.selectionEnd || 0) + "](url)",
       markdownInput.selectionStart || 0,
       markdownInput.selectionEnd || 0,
       "select"
