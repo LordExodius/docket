@@ -12,14 +12,17 @@
 
 <body id="docketBody" data-theme="light">
   <div id="sidebar">
-    <header>
-      <h6>Docket ></h6>
+    <header class="sidebar">
+      <div id="appTitle">
+        <h6>Docket ></h6>
+        <button id="sidebarToggleButtonInset" title="Toggle Sidebar">☰</button>
+      </div>
       <div id="noteOptions">
         <button id="newNoteButton" title="New Note">📝</button>
         <button id="deleteNoteButton" title="Delete Note">🗑️</button>
       </div>
-      <div class="horizontalDivider"></div>
     </header>
+    <div class="horizontalDivider"></div>
     <ol id="noteList"></ol>
     <div id="footer">
       <label>Code Style:
@@ -47,6 +50,7 @@
   <main id="docketMain">
     <header id="navbar">
       <div id="navLeft">
+        <button id="sidebarToggleButton" title="Toggle Sidebar">☰</button>
         <input type="text" id="noteTitle">
       </div>
       <div id="navRight">
