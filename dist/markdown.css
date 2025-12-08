@@ -61,7 +61,9 @@ hr,
 ol ol,
 ol ul,
 ul ol,
-ul ul {
+ul ul,
+ol p,
+ul p {
   margin: 0;
 }
 
