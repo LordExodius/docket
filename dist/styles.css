@@ -177,7 +177,7 @@ input[type="checkbox"] {
   display: flex;
 }
 
-#noteList {
+#noteList, #dropZone{
   flex-grow: 1;
   max-height: calc(100% - 20px);
   list-style-type: none;
@@ -315,6 +315,15 @@ input[type="checkbox"] {
 #deleteNoteButton {
   flex-grow: 1;
   width: 0;
+}
+
+#dropZone {
+  width: 100%;
+
+}
+
+#fileInput {
+  display: none;
 }
 
 .switch {

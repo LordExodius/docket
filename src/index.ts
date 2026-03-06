@@ -800,6 +800,52 @@ mdTitle.addEventListener(
   })
 );
 
+// Remove click listener for dragZone
+const dropZone = <HTMLElement>document.getElementById("dropZone");
+dropZone.addEventListener("click", (e) => {
+  e.preventDefault();
+})
+// Remove default file drop behaviour for the window
+window.addEventListener("drop", (e) => {
+  if (e.dataTransfer && [...e.dataTransfer.items].some((item) => item.kind === "file")) {
+    e.preventDefault();
+  }
+})
+// Remove default file dragover behaviour for the window
+window.addEventListener("dragover", (e) => {
+  const fileItems = [...e.dataTransfer!.items].filter(
+    (item) => item.kind === "file"
+  );
+  if (fileItems.length > 0) {
+    e.preventDefault();
+    if (!dropZone.contains(e.target as Node)) {
+      e.dataTransfer!.dropEffect = "none";
+    }
+  }
+})
+
+const fileDropHandler = (e: DragEvent) => {
+  e.preventDefault();
+  const files = [...e.dataTransfer!.items]
+    .map((item) => item.getAsFile())
+    .filter((file) => file);
+  if (!files) return;
+  for (const file of files) {
+    if (file?.type === "text/markdown") {
+      const fileName = file.name.replace(/\.[^/.]+$/, "")
+      file.text()
+        .then((text) => {
+          createNote({
+            title: fileName,
+            body: text,
+          })
+        })
+    }
+  }
+}
+
+dropZone.addEventListener("drop", fileDropHandler)
+
 // Override default tab behaviour
 markdownInput.addEventListener("keydown", (e) => {
   if (e.key === "Tab") {
