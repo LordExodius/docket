@@ -4,6 +4,7 @@ import { markedHighlight } from "marked-highlight";
 import markedFootnote from "marked-footnote";
 import markedAlert from "marked-alert";
 import hljs from "highlight.js/lib/core";
+import JSZip from "jszip";
 
 import { UserNote, NoteStore } from "./definitions";
 
@@ -487,11 +488,19 @@ const saveNoteStore = () => {
 const createNote = (noteTemplate?: Partial<UserNote>): UserNote => {
   // Create a new note object
   const newNote: UserNote = {
-    uuid: crypto.randomUUID(),
+    uuid: noteTemplate?.uuid || crypto.randomUUID(),
     title: noteTemplate?.title || "New Note",
     body: noteTemplate?.body || "",
-    lastUpdated: Date.now(),
+    createdAt: noteTemplate?.createdAt || Date.now(),
+    lastUpdated: noteTemplate?.lastUpdated || Date.now(),
   };
+
+  if (docketProps.noteStore.noteMap.has(newNote.uuid))
+  {
+    if (newNote.title == getNoteByUUID(newNote.uuid).title)
+      newNote.title = `Copy - ${newNote.title}`
+    newNote.uuid = crypto.randomUUID()
+  }
 
   // Add the new note to the note store
   setNoteByUUID(newNote.uuid, newNote);
@@ -541,6 +550,23 @@ const deleteActiveNote = () => {
 };
 
 /**
+ * Returns a formatted markdown string with YAML frontmatter
+ * @param note 
+ * @returns 
+ */
+const noteToMarkdown = (note: UserNote): string => {
+  const markdown = 
+`---
+uuid: '${note.uuid}'
+title: '${note.title}'
+createdAt: ${note.createdAt}
+lastUpdated: ${note.lastUpdated}
+---
+${note.body}`
+  return markdown
+}
+
+/**
  * Download the currently active note as a markdown file.
  */
 const downloadActiveNote = () => {
@@ -548,7 +574,7 @@ const downloadActiveNote = () => {
   if (!activeNote) {
     return;
   }
-  const blob = new Blob([activeNote.body], { type: "text/markdown" });
+  const blob = new Blob([noteToMarkdown(activeNote)], { type: "text/markdown" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -558,6 +584,50 @@ const downloadActiveNote = () => {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 };
+
+/**
+ * Download all notes in a zip file
+ */
+const downloadAllNotes = () => {
+  const zip = new JSZip();
+  const noteNames = new Map<string, number>();
+  docketProps.noteStore.noteMap.forEach((note: UserNote, uuid: string) => {
+    const fileName = noteNames.has(note.title) ? `${note.title} (${noteNames.get(note.title)})` : note.title
+    noteNames.set(note.title, (noteNames.get(note.title) ?? 0) + 1)
+    zip.file(`${fileName}.md`, noteToMarkdown(note))
+  })
+  zip.generateAsync({type:"blob"})
+  .then((blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const date = new Date()
+    a.href = url;
+    a.download = `notes - ${date.getFullYear()}${date.getMonth() + 1}${date.getDate()}`;
+      document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  })
+}
+
+const importNote = (noteString: string) => {
+  // Parse YAML Frontmatter
+  const yamlRegex = /^---\r?\n([\s\S]*?)\r?\n---/
+  const capture = noteString.match(yamlRegex)?.[1] ?? null
+  const body = noteString.replace(yamlRegex, "").trim()
+  let noteTemplate: any = {body: body} // bad typing :(
+
+  // If no frontmatter found, simply create the note
+  if (!capture) return createNote(noteTemplate)
+
+  // If frontmatter found, parse and create note
+  const frontmatterArr = capture.replace(/: /g, ":").split("\n")
+  frontmatterArr.forEach((kv: string) => {
+    const [key, value] = kv.split(":", 2)
+    noteTemplate[key] = value.replace(/^'|'$/g, "")
+  })
+  return createNote(noteTemplate)
+}
 
 /**
  * Set theme for all elements with `data-theme` attribute.
@@ -766,6 +836,10 @@ newNoteButton.addEventListener("click", newNoteHandler);
 const downloadNoteButton = <HTMLButtonElement>document.getElementById("downloadNoteButton");
 downloadNoteButton.addEventListener("click", downloadActiveNote);
 
+// DOWNLOAD ALL NOTES EVENT LISTENER
+const downloadAllNotesButton = <HTMLButtonElement>document.getElementById("downloadAllNotesButton");
+downloadAllNotesButton.addEventListener("click", downloadAllNotes);
+
 // EDITOR EVENT LISTENERS
 const markdownInput = <HTMLInputElement>document.getElementById("markdownInput");
 const mdTitle = <HTMLElement>document.getElementById("noteTitle");
@@ -824,6 +898,11 @@ window.addEventListener("dragover", (e) => {
   }
 })
 
+/**
+ * Handles file imports via drag and drop
+ * @param e 
+ * @returns 
+ */
 const fileDropHandler = (e: DragEvent) => {
   e.preventDefault();
   const files = [...e.dataTransfer!.items]
@@ -835,10 +914,7 @@ const fileDropHandler = (e: DragEvent) => {
       const fileName = file.name.replace(/\.[^/.]+$/, "")
       file.text()
         .then((text) => {
-          createNote({
-            title: fileName,
-            body: text,
-          })
+          importNote(text)
         })
     }
   }

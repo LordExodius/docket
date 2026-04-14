@@ -11,8 +11,8 @@ interface UserNote {
   uuid: string;
   title: string;
   body: string;
+  createdAt: number;
   lastUpdated: number;
-  lastSynced?: number;
 }
 
 interface NoteStore {
